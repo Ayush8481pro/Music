@@ -217,9 +217,6 @@
 </head>
 <body>
 
-    <!-- IMPORTANT: Physical Audio Element for Better OS Integration -->
-    <audio id="main-audio" style="display: none;"></audio>
-
     <!-- SETUP SCREEN -->
     <div id="setup-screen" class="setup-overlay" style="display: none;">
         <div class="setup-card">
@@ -418,8 +415,8 @@
         const cropModal = document.getElementById('crop-modal');
         const cropImageEl = document.getElementById('crop-image');
         
-        // MODIFICATION: Use physical DOM element for better Android integration
-        const audio = document.getElementById('main-audio'); 
+        const audio = new Audio();
+        audio.preload = "auto"; 
         
         const viewHome = document.getElementById('view-home');
         const viewPlaylist = document.getElementById('view-playlist');
@@ -445,15 +442,6 @@
             if(fullPlayer.classList.contains('active')) { fullPlayer.classList.remove('active'); return; }
             if(viewPlaylist.classList.contains('active')) { viewPlaylist.classList.remove('active'); viewHome.classList.add('active'); return; }
         };
-
-        // --- HELPER: Request Permissions ---
-        function requestNotificationPermission() {
-            if ("Notification" in window) {
-                Notification.requestPermission().then(permission => {
-                    console.log("Notification permission:", permission);
-                });
-            }
-        }
 
         // --- PROFILE LOGIC ---
         let pressTimer;
@@ -503,9 +491,6 @@
         }
 
         function saveProfile() {
-            // MODIFICATION: Request Permission on Profile Save
-            requestNotificationPermission();
-
             const name = document.getElementById('user-name-input').value;
             const img = document.getElementById('preview-img').src;
             if(!name) { alert("Please enter a name"); return; }
@@ -518,9 +503,6 @@
         }
 
         function skipProfile() {
-            // MODIFICATION: Request Permission on Skip
-            requestNotificationPermission();
-
             userProfile = { name: "Guest User", image: "https://via.placeholder.com/50" };
             localStorage.setItem('userProfile', JSON.stringify(userProfile));
             document.getElementById('setup-screen').style.display = 'none';
@@ -661,17 +643,15 @@
 
         // --- AUDIO ---
         async function playSong(plIndex, sIndex) {
-            // MODIFICATION: Double check permission on play
-            if (Notification.permission !== 'granted') {
-                requestNotificationPermission();
-            }
-
             const playlist = allPlaylists[plIndex];
             currentPlaylistIndex = plIndex;
             currentSongIndex = sIndex;
             const song = playlist.songs[sIndex];
             currentOriginalUrl = song.url;
             
+            // Set Metadata Immediately
+            updateMediaSession(true);
+
             const offlineBlob = await getBlob(song.url);
             if (offlineBlob) {
                 audio.src = URL.createObjectURL(offlineBlob);
@@ -681,13 +661,10 @@
                 document.getElementById('offline-badge').style.display = 'none';
             }
 
-            // Init session before play
-            updateMediaSession(true);
-
             audio.play().then(() => {
                 isPlaying = true;
                 updatePlayerUI();
-                updateMediaSession(); // Update again after play success
+                updateMediaSession();
                 if(viewPlaylist.classList.contains('active')) {
                      const rows = document.querySelectorAll('.song-row');
                      rows.forEach(r => r.classList.remove('playing'));
@@ -714,23 +691,17 @@
             if (!song) return;
 
             if ('mediaSession' in navigator) {
-                // MODIFICATION: Removed specific sizes to let OS handle it better, and ensured type is correct
-                navigator.mediaSession.metadata = new MediaMetadata({
-                    title: song.title,
-                    artist: "Ayush@8481",
-                    artwork: [
-                        { src: song.image, sizes: '96x96', type: 'image/jpeg' },
-                        { src: song.image, sizes: '128x128', type: 'image/jpeg' },
-                        { src: song.image, sizes: '192x192', type: 'image/jpeg' },
-                        { src: song.image, sizes: '512x512', type: 'image/jpeg' }
-                    ]
-                });
+                if(init || !navigator.mediaSession.metadata) {
+                    navigator.mediaSession.metadata = new MediaMetadata({
+                        title: song.title, artist: "Ayush@8481",
+                        artwork: [{ src: song.image, sizes: '512x512', type: 'image/jpeg' }]
+                    });
+                }
                 
                 navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
                 
-                navigator.mediaSession.setActionHandler('play', () => { audio.play(); });
-                navigator.mediaSession.setActionHandler('pause', () => { audio.pause(); });
-                navigator.mediaSession.setActionHandler('stop', () => { audio.pause(); }); // Added stop handler
+                navigator.mediaSession.setActionHandler('play', () => audio.play());
+                navigator.mediaSession.setActionHandler('pause', () => audio.pause());
                 navigator.mediaSession.setActionHandler('nexttrack', nextSong);
                 navigator.mediaSession.setActionHandler('previoustrack', prevSong);
                 navigator.mediaSession.setActionHandler('seekto', (details) => {
@@ -738,6 +709,7 @@
                     updatePositionState();
                 });
                 
+                // Only update position if duration is known
                 if(audio.duration && !isNaN(audio.duration)) updatePositionState();
             }
         }
@@ -746,6 +718,7 @@
         audio.addEventListener('pause', () => { isPlaying = false; updateMediaSession(); updatePlayerUI(); });
         audio.addEventListener('ended', () => { if(isLoop) { audio.currentTime = 0; audio.play(); } else nextSong(); });
         
+        // NOTIFICATION TIMELINE FIXES
         audio.addEventListener('loadedmetadata', () => {
             if(!isNaN(audio.duration)) {
                 document.getElementById('dur-time').innerText = formatTime(audio.duration);
@@ -786,6 +759,7 @@
             audio.currentTime = seekSlider.value;
         });
         seekSlider.addEventListener('change', () => {
+            // When user releases slider
             updatePositionState();
         });
 
@@ -864,4 +838,4 @@
         function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
     </script>
 </body>
-</html>
+                </html>
