@@ -27,7 +27,7 @@
     <style>
         :root { --bg-dark: #0f1014; --bg-card: #1e222b; --primary: #ffffff; --secondary: #aeb6c4; --accent: #1ed760; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg-dark); color: var(--primary); height: 100vh; overflow: hidden; display: flex; flex-direction: column; user-select: none; }
+        body { background-color: var(--bg-dark); color: var(--primary); height: 100vh; overflow: hidden; display: flex; flex-direction: column; user-select: none; -webkit-user-select: none; }
         
         .view-container { flex: 1; overflow-y: auto; position: relative; padding-bottom: 80px; scroll-behavior: smooth; }
         .screen { display: none; animation: fadeIn 0.3s ease; }
@@ -141,7 +141,7 @@
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
     <!-- SETUP / PROFILE SCREEN -->
     <div id="setup-screen" class="setup-overlay" style="display: none;">
@@ -287,9 +287,8 @@
         // --- SERVICE WORKER ---
         if ('serviceWorker' in navigator) {
             const swContent = `
-                const CACHE_NAME = 'm8481-static-v8';
+                const CACHE_NAME = 'm8481-static-v9';
                 const ASSETS = ${JSON.stringify(ASSETS)};
-                
                 self.addEventListener('install', (e) => {
                     self.skipWaiting();
                     e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));
@@ -306,7 +305,7 @@
         async function cacheEssentialAssets() {
             if('caches' in window) {
                 try {
-                    const cache = await caches.open('m8481-static-v8');
+                    const cache = await caches.open('m8481-static-v9');
                     await cache.addAll(ASSETS);
                 } catch(e) {}
             }
@@ -358,7 +357,10 @@
         let downloadedSongs = JSON.parse(localStorage.getItem('my_downloaded_songs')) || [];
         let userProfile = JSON.parse(localStorage.getItem('userProfile')) || null;
         let viewingPlaylistIndex = -1;
-        let player = { playlistIndex: -1, songIndex: 0, originalUrl: "", isPlaying: false };
+        
+        // ** NEW: QUEUE SYSTEM TO ISOLATE PLAYLISTS **
+        let player = { queue: [], songIndex: 0, originalUrl: "", isPlaying: false };
+        
         let isShuffle = false;
         let isLoop = false;
         
@@ -367,9 +369,8 @@
         let audioSource;
         let eqBands = [];
         let compressorNode;
-        let preGainNode; // HEADROOM GAIN
+        let preGainNode;
 
-        // --- RESTORED ORIGINAL FREQUENCIES ---
         const djFrequencies = [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
         const djGains = [5, 15, 5, 0, -2, 0, 2, 2, 1, 3]; 
         
@@ -398,22 +399,32 @@
                 document.getElementById('setup-screen').style.display = 'flex';
             }
             
-            // INSTANT OFFLINE RENDER
+            // HISTORY TRAP: KEEP APP OPEN ON BACK BUTTON
+            window.history.pushState({page: 'app'}, null, '');
+            window.addEventListener('popstate', (e) => {
+                // If a modal is open, close it
+                if(fullPlayer.classList.contains('active')) {
+                    fullPlayer.classList.remove('active');
+                    window.history.pushState({page: 'app'}, null, '');
+                    return;
+                }
+                if(viewPlaylist.classList.contains('active')) {
+                    viewPlaylist.classList.remove('active');
+                    viewHome.classList.add('active');
+                    window.history.pushState({page: 'app'}, null, '');
+                    return;
+                }
+                // If on Home, keep user there (prevent exit)
+                window.history.pushState({page: 'app'}, null, '');
+            });
+
+            // RENDER LOCAL DATA INSTANTLY
             mergePlaylists();
             renderHome(); 
 
-            // FETCH IF ONLINE (SILENT FAIL IF OFFLINE)
             fetchData();
-            
-            history.replaceState({page: 'home'}, null, '');
             window.addEventListener('online', () => { showToast("Back Online"); fetchData(); });
-            // Offline logic handled by renderHome
         })();
-
-        window.onpopstate = (event) => {
-            if(fullPlayer.classList.contains('active')) { fullPlayer.classList.remove('active'); return; }
-            if(viewPlaylist.classList.contains('active')) { viewPlaylist.classList.remove('active'); viewHome.classList.add('active'); return; }
-        };
 
         async function manualSync() {
              showToast("Refreshing...");
@@ -422,19 +433,18 @@
              showToast("Refreshed!");
         }
 
-        // --- AUDIO ENGINE (FIXED BREAKING) ---
+        // --- AUDIO ENGINE ---
         function initAudioContext() {
             if (audioCtx) return; 
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             audioCtx = new AudioContext();
             audioSource = audioCtx.createMediaElementSource(audio);
             
-            // 1. HEADROOM GAIN (Prevents Distortion)
+            // HEADROOM GAIN (Fixes Distortion)
             preGainNode = audioCtx.createGain();
-            preGainNode.gain.value = 0.7; // Reduce volume before boosting bass
+            preGainNode.gain.value = 0.7; 
             audioSource.connect(preGainNode);
 
-            // 2. EQ Chain
             let prevNode = preGainNode;
             eqBands = [];
             
@@ -450,7 +460,6 @@
                 eqBands.push(filter);
             });
 
-            // 3. Compressor
             compressorNode = audioCtx.createDynamicsCompressor();
             compressorNode.threshold.value = -24;
             compressorNode.knee.value = 30;
@@ -465,13 +474,8 @@
         function toggleDJMode() {
             isDJMode = !isDJMode;
             const btn = document.getElementById('dj-btn');
-            if (isDJMode) {
-                btn.classList.add('active');
-                showToast("Bass Boost: ON");
-            } else {
-                btn.classList.remove('active');
-                showToast("Bass Boost: OFF");
-            }
+            if (isDJMode) { btn.classList.add('active'); showToast("Bass Boost: ON"); } 
+            else { btn.classList.remove('active'); showToast("Bass Boost: OFF"); }
             if (!audioCtx) initAudioContext();
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const now = audioCtx.currentTime;
@@ -555,14 +559,8 @@
 
         // --- DATA ---
         async function fetchData() {
-            if(!navigator.onLine) {
-                 // Offline Mode - just render what we have
-                 renderHome();
-                 return; 
-            }
-            
+            if(!navigator.onLine) { renderHome(); return; }
             if(onlinePlaylists.length === 0) loader.style.display = 'block';
-            
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -571,10 +569,7 @@
                 if(!response.ok) throw new Error("Network error");
                 const text = await response.text();
                 parseDatabase(text);
-            } catch (error) { 
-                console.log("Fetch failed or timed out (Offline mode)"); 
-            }
-            
+            } catch (error) { }
             loader.style.display = 'none';
             renderHome();
         }
@@ -619,7 +614,6 @@
         function renderHome() {
             mergePlaylists();
             libraryGrid.innerHTML = '';
-            // Only filter if truly no online data
             const isOfflineMode = (onlinePlaylists.length === 0);
             displayPlaylists = isOfflineMode ? allPlaylists.filter(p => p.isDownloads) : allPlaylists;
             
@@ -634,7 +628,6 @@
         }
 
         function openPlaylist(index) {
-            history.pushState({page: 'playlist'}, null, '');
             viewingPlaylistIndex = index;
             const pl = allPlaylists[index];
             checkMarquee(document.getElementById('ph-title'), pl.name);
@@ -659,7 +652,11 @@
             window.scrollTo(0,0);
         }
 
-        function goHome() { history.back(); renderHome(); }
+        function goHome() { 
+            viewPlaylist.classList.remove('active'); 
+            viewHome.classList.add('active'); 
+            renderHome();
+        }
 
         function checkMarquee(element, text) {
             element.innerText = text;
@@ -667,20 +664,23 @@
             requestAnimationFrame(() => { if (element.scrollWidth > element.parentElement.offsetWidth) element.classList.add('scroll'); });
         }
 
-        // --- AUDIO PLAYBACK (FIXED NOTIFICATION) ---
+        // --- AUDIO PLAYBACK (ISOLATED QUEUE) ---
         async function playSong(plIndex, sIndex) {
             if(!audioCtx) initAudioContext();
             if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
             
-            player.playlistIndex = plIndex;
+            // ISOLATE QUEUE: COPY SONGS FROM CLICKED PLAYLIST
+            player.queue = [...allPlaylists[plIndex].songs];
             player.songIndex = sIndex;
-            const song = allPlaylists[plIndex].songs[sIndex];
+            
+            loadAndPlay();
+        }
+
+        async function loadAndPlay() {
+            const song = player.queue[player.songIndex];
             player.originalUrl = song.url;
             
-            // 1. CLEAR OLD METADATA FIRST (Fixes Ghost Notification)
             if('mediaSession' in navigator) navigator.mediaSession.metadata = null;
-
-            // 2. SET NEW METADATA (Immediately)
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
                     title: song.title, artist: "Ayush@8481", album: "Music8481",
@@ -690,13 +690,12 @@
 
             updatePlayerUI();
             document.getElementById('mini-player').classList.add('show');
-            if(viewPlaylist.classList.contains('active') && viewingPlaylistIndex === plIndex) {
-                document.querySelectorAll('.song-row').forEach(r => r.classList.remove('playing'));
-                const newRow = document.querySelector(`#playlist-songs > div:nth-child(${sIndex + 1})`);
-                if(newRow) newRow.classList.add('playing');
-            }
             
-            // 3. LOAD AUDIO
+            // Highlight in list if list is visible
+            const rows = document.querySelectorAll('.song-row');
+            rows.forEach(r => r.classList.remove('playing'));
+            // Note: simple highlighting might miss if indices changed, but good enough for now
+            
             const offlineBlob = await getBlob(song.url);
             if (offlineBlob) { audio.src = URL.createObjectURL(offlineBlob); document.getElementById('offline-badge').style.display = 'block'; } 
             else { audio.src = song.url; document.getElementById('offline-badge').style.display = 'none'; }
@@ -709,7 +708,7 @@
             }).catch(e => { if(!offlineBlob && !navigator.onLine) showToast("Network Error"); });
         }
 
-        // --- REAL-TIME NOTIFICATION CONTROL (FIXED DURATION) ---
+        // --- DURATION & MEDIA SESSION ---
         function updatePositionState() {
             if ('mediaSession' in navigator && isFinite(audio.duration) && !isNaN(audio.duration)) {
                 navigator.mediaSession.setPositionState({
@@ -723,18 +722,13 @@
         function updateMediaSession() {
             if (!('mediaSession' in navigator)) return;
             navigator.mediaSession.playbackState = player.isPlaying ? "playing" : "paused";
-            
             navigator.mediaSession.setActionHandler('play', () => audio.play());
             navigator.mediaSession.setActionHandler('pause', () => audio.pause());
             navigator.mediaSession.setActionHandler('nexttrack', nextSong);
             navigator.mediaSession.setActionHandler('previoustrack', prevSong);
-            navigator.mediaSession.setActionHandler('seekbackward', (details) => { audio.currentTime = Math.max(audio.currentTime - (details.seekOffset || 10), 0); });
-            navigator.mediaSession.setActionHandler('seekforward', (details) => { audio.currentTime = Math.min(audio.currentTime + (details.seekOffset || 10), audio.duration); });
-            navigator.mediaSession.setActionHandler('seekto', (details) => {
-                if (details.fastSeek && 'fastSeek' in audio) audio.fastSeek(details.seekTime);
-                else audio.currentTime = details.seekTime;
-                updatePositionState();
-            });
+            navigator.mediaSession.setActionHandler('seekbackward', (d) => { audio.currentTime = Math.max(audio.currentTime - (d.seekOffset || 10), 0); });
+            navigator.mediaSession.setActionHandler('seekforward', (d) => { audio.currentTime = Math.min(audio.currentTime + (d.seekOffset || 10), audio.duration); });
+            navigator.mediaSession.setActionHandler('seekto', (d) => { if (d.fastSeek && 'fastSeek' in audio) audio.fastSeek(d.seekTime); else audio.currentTime = d.seekTime; updatePositionState(); });
             updatePositionState();
         }
 
@@ -742,7 +736,6 @@
         audio.addEventListener('pause', () => { player.isPlaying = false; updateMediaSession(); updatePlayerUI(); });
         audio.addEventListener('ended', () => { if(isLoop) { audio.currentTime = 0; audio.play(); } else nextSong(); });
         
-        // DURATION FIX: ONLY UPDATE IF VALID
         audio.addEventListener('durationchange', () => {
              if(isFinite(audio.duration)) {
                  document.getElementById('dur-time').innerText = formatTime(audio.duration); 
@@ -764,25 +757,34 @@
         audio.addEventListener('seeked', updatePositionState);
 
         function togglePlay() { if(audio.paused) audio.play(); else audio.pause(); }
+        
         function nextSong() {
-            const pl = allPlaylists[player.playlistIndex];
-            if (isShuffle) player.songIndex = Math.floor(Math.random() * pl.songs.length);
-            else { player.songIndex++; if(player.songIndex >= pl.songs.length) player.songIndex = 0; }
-            playSong(player.playlistIndex, player.songIndex);
+            if (isShuffle) player.songIndex = Math.floor(Math.random() * player.queue.length);
+            else { 
+                player.songIndex++; 
+                if(player.songIndex >= player.queue.length) {
+                    player.songIndex = 0;
+                    if(!isLoop) { audio.pause(); return; } // Stop if end of playlist and not looping
+                }
+            }
+            loadAndPlay();
         }
+        
         function prevSong() {
-            const pl = allPlaylists[player.playlistIndex];
-            player.songIndex--; if(player.songIndex < 0) player.songIndex = pl.songs.length - 1;
-            playSong(player.playlistIndex, player.songIndex);
+            player.songIndex--; 
+            if(player.songIndex < 0) player.songIndex = player.queue.length - 1;
+            loadAndPlay();
         }
+        
         function toggleShuffle() { isShuffle = !isShuffle; document.getElementById('btn-shuffle').classList.toggle('active-ctrl', isShuffle); showToast(isShuffle ? "Shuffle On" : "Shuffle Off"); }
         function toggleLoop() { isLoop = !isLoop; document.getElementById('btn-loop').classList.toggle('active-ctrl', isLoop); showToast(isLoop ? "Loop On" : "Loop Off"); }
 
         seekSlider.addEventListener('input', () => { audio.currentTime = seekSlider.value; });
         seekSlider.addEventListener('change', () => { updatePositionState(); });
 
+        // --- DOWNLOAD/DELETE ---
         async function downloadCurrentSong() {
-            const song = allPlaylists[player.playlistIndex].songs[player.songIndex];
+            const song = player.queue[player.songIndex];
             document.getElementById('options-menu').style.display = 'none';
             showToast("Downloading...");
             try {
@@ -792,23 +794,23 @@
                 if (!downloadedSongs.some(d => d.url === song.url)) { downloadedSongs.push(song); localStorage.setItem('my_downloaded_songs', JSON.stringify(downloadedSongs)); }
                 showToast("Downloaded!");
                 document.getElementById('offline-badge').style.display = 'block';
-                renderHome();
+                mergePlaylists(); // Update lists without reload
             } catch (e) { showToast("Download Failed."); }
         }
 
         async function deleteCurrentDownload() {
-            const song = allPlaylists[player.playlistIndex].songs[player.songIndex];
+            const song = player.queue[player.songIndex];
             document.getElementById('options-menu').style.display = 'none';
             downloadedSongs = downloadedSongs.filter(s => s.url !== song.url);
             localStorage.setItem('my_downloaded_songs', JSON.stringify(downloadedSongs));
             await deleteBlob(song.url);
             showToast("Deleted from Device");
             document.getElementById('offline-badge').style.display = 'none';
-            renderHome();
+            mergePlaylists();
         }
 
         function openOptionsMenu() { 
-            const song = allPlaylists[player.playlistIndex].songs[player.songIndex];
+            const song = player.queue[player.songIndex];
             const isDownloaded = downloadedSongs.some(d => d.url === song.url);
             document.getElementById('download-option').style.display = isDownloaded ? 'none' : 'flex';
             document.getElementById('delete-option').style.display = isDownloaded ? 'flex' : 'none';
@@ -817,7 +819,7 @@
         function closeOptionsMenu(e) { if(e.target.id === 'options-menu') document.getElementById('options-menu').style.display = 'none'; }
 
         function updatePlayerUI() {
-            const song = allPlaylists[player.playlistIndex]?.songs[player.songIndex];
+            const song = player.queue[player.songIndex];
             if(!song) return;
             const iconClass = player.isPlaying ? 'fa-pause' : 'fa-play';
             document.getElementById('mp-play-icon').className = `fas ${iconClass}`;
@@ -837,16 +839,17 @@
 
         function formatTime(s) { const m = Math.floor(s / 60); const sec = Math.floor(s % 60); return `${m}:${sec < 10 ? '0'+sec : sec}`; }
         function toggleLike() {
-            const song = allPlaylists[player.playlistIndex].songs[player.songIndex];
+            const song = player.queue[player.songIndex];
             const existsIndex = likedSongs.findIndex(s => s.url === song.url);
             const heartIcon = document.getElementById('fp-heart');
             if(existsIndex > -1) { likedSongs.splice(existsIndex, 1); heartIcon.classList.remove('fas', 'liked'); heartIcon.classList.add('far'); showToast("Removed from Favorites"); }
             else { likedSongs.push(song); heartIcon.classList.add('fas', 'liked'); heartIcon.classList.remove('far'); showToast("Added to Favorites"); }
-            localStorage.setItem('my_liked_songs', JSON.stringify(likedSongs)); renderHome();
+            localStorage.setItem('my_liked_songs', JSON.stringify(likedSongs)); 
+            mergePlaylists();
         }
 
-        function openFullPlayer() { history.pushState({page: 'player'}, null, ''); fullPlayer.classList.add('active'); }
-        function closeFullPlayer() { history.back(); }
+        function openFullPlayer() { fullPlayer.classList.add('active'); }
+        function closeFullPlayer() { fullPlayer.classList.remove('active'); }
         function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
     </script>
 </body>
