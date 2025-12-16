@@ -643,6 +643,13 @@
 
         // --- AUDIO ---
         async function playSong(plIndex, sIndex) {
+            // Permission Check
+            if ("Notification" in window && Notification.permission === "default") {
+                try {
+                    await Notification.requestPermission();
+                } catch (e) { console.log("Permission ignored"); }
+            }
+
             const playlist = allPlaylists[plIndex];
             currentPlaylistIndex = plIndex;
             currentSongIndex = sIndex;
@@ -660,6 +667,9 @@
                 audio.src = song.url;
                 document.getElementById('offline-badge').style.display = 'none';
             }
+            
+            // Helpful for mobile web audio focus
+            audio.title = song.title;
 
             audio.play().then(() => {
                 isPlaying = true;
@@ -691,22 +701,40 @@
             if (!song) return;
 
             if ('mediaSession' in navigator) {
-                if(init || !navigator.mediaSession.metadata) {
-                    navigator.mediaSession.metadata = new MediaMetadata({
-                        title: song.title, artist: "Ayush@8481",
-                        artwork: [{ src: song.image, sizes: '512x512', type: 'image/jpeg' }]
-                    });
-                }
+                // Ensure image is valid for metadata
+                const artworkSrc = song.image || 'https://via.placeholder.com/512';
                 
+                // Always update metadata to ensure lock screen is fresh
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: song.title,
+                    artist: "Ayush@8481",
+                    album: allPlaylists[currentPlaylistIndex]?.name || "Music Player",
+                    artwork: [
+                        { src: artworkSrc, sizes: '96x96', type: 'image/png' },
+                        { src: artworkSrc, sizes: '128x128', type: 'image/png' },
+                        { src: artworkSrc, sizes: '192x192', type: 'image/png' },
+                        { src: artworkSrc, sizes: '256x256', type: 'image/png' },
+                        { src: artworkSrc, sizes: '384x384', type: 'image/png' },
+                        { src: artworkSrc, sizes: '512x512', type: 'image/png' },
+                    ]
+                });
+
                 navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
                 
-                navigator.mediaSession.setActionHandler('play', () => audio.play());
-                navigator.mediaSession.setActionHandler('pause', () => audio.pause());
+                navigator.mediaSession.setActionHandler('play', () => {
+                    audio.play();
+                    // updatePlayerUI will be called by audio listener
+                });
+                navigator.mediaSession.setActionHandler('pause', () => {
+                    audio.pause();
+                });
                 navigator.mediaSession.setActionHandler('nexttrack', nextSong);
                 navigator.mediaSession.setActionHandler('previoustrack', prevSong);
                 navigator.mediaSession.setActionHandler('seekto', (details) => {
-                    audio.currentTime = details.seekTime;
-                    updatePositionState();
+                    if (details.seekTime && !isNaN(details.seekTime)) {
+                        audio.currentTime = details.seekTime;
+                        updatePositionState();
+                    }
                 });
                 
                 // Only update position if duration is known
@@ -740,7 +768,14 @@
         });
 
         // --- CONTROLS ---
-        function togglePlay() { if(audio.paused) audio.play(); else audio.pause(); }
+        function togglePlay() { 
+            // Also check permission here if user clicks play/pause quickly
+            if ("Notification" in window && Notification.permission === "default") {
+                 Notification.requestPermission();
+            }
+            if(audio.paused) audio.play(); else audio.pause(); 
+        }
+
         function nextSong() {
             const pl = allPlaylists[currentPlaylistIndex];
             if (isShuffle) currentSongIndex = Math.floor(Math.random() * pl.songs.length);
@@ -817,6 +852,9 @@
             const heartIcon = document.getElementById('fp-heart');
             if(isLiked) { heartIcon.classList.add('fas', 'liked'); heartIcon.classList.remove('far'); }
             else { heartIcon.classList.remove('fas', 'liked'); heartIcon.classList.add('far'); }
+            
+            // Also update page title for browser tab/system UI
+            document.title = isPlaying ? `${song.title} - Music@8481` : 'Music Player @8481';
         }
 
         function formatTime(s) {
@@ -838,4 +876,4 @@
         function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
     </script>
 </body>
-                </html>
+    </html>
