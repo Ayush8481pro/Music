@@ -12,11 +12,11 @@
     <meta name="theme-color" content="#0f1014">
     <meta name="application-name" content="Music8481">
     
-    <!-- LOGO -->
+    <!-- ICONS -->
     <link rel="apple-touch-icon" href="https://ayush8481-dev.github.io/Temp/IMG_20251216_201906.jpg">
     <link rel="icon" type="image/jpeg" href="https://ayush8481-dev.github.io/Temp/IMG_20251216_201906.jpg">
 
-    <!-- Manifest -->
+    <!-- MANIFEST -->
     <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIk11c2ljODQ4MSIsCiAgInNob3J0X25hbWUiOiAiTXVzaWM4NDgxIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwZjEwMTQiLAogICJ0aGVtZV9jb2xvciI6ICIjMGYxMDE0IiwKICAib3JpZW50YXRpb24iOiAicG9ydHJhaXQiLAogICJzY29wZSI6ICIuIiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiaHR0cHM6Ly9heXVzaDg0ODEtZGV2LmdpdGh1Yi5pby9UZW1wL0lNR18yMDI1MTIxNl8yMDE5MDYuanBnIiwKICAgICAgInNpemVzIjogIjUxMng1MTIiLAogICAgICJ0eXBlIjogImltYWdlL2pwZWciCiAgICB9CiAgXQp9">
 
     <!-- Styles & Libs -->
@@ -287,7 +287,7 @@
         // --- SERVICE WORKER ---
         if ('serviceWorker' in navigator) {
             const swContent = `
-                const CACHE_NAME = 'm8481-static-v7';
+                const CACHE_NAME = 'm8481-static-v8';
                 const ASSETS = ${JSON.stringify(ASSETS)};
                 
                 self.addEventListener('install', (e) => {
@@ -306,7 +306,7 @@
         async function cacheEssentialAssets() {
             if('caches' in window) {
                 try {
-                    const cache = await caches.open('m8481-static-v7');
+                    const cache = await caches.open('m8481-static-v8');
                     await cache.addAll(ASSETS);
                 } catch(e) {}
             }
@@ -367,7 +367,9 @@
         let audioSource;
         let eqBands = [];
         let compressorNode;
+        let preGainNode; // HEADROOM GAIN
 
+        // --- RESTORED ORIGINAL FREQUENCIES ---
         const djFrequencies = [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
         const djGains = [5, 15, 5, 0, -2, 0, 2, 2, 1, 3]; 
         
@@ -395,11 +397,17 @@
                 document.getElementById('preview-img').src = DEFAULT_IMG;
                 document.getElementById('setup-screen').style.display = 'flex';
             }
+            
+            // INSTANT OFFLINE RENDER
+            mergePlaylists();
             renderHome(); 
+
+            // FETCH IF ONLINE (SILENT FAIL IF OFFLINE)
             fetchData();
+            
             history.replaceState({page: 'home'}, null, '');
             window.addEventListener('online', () => { showToast("Back Online"); fetchData(); });
-            window.addEventListener('offline', () => { showToast("Offline Mode"); renderHome(); });
+            // Offline logic handled by renderHome
         })();
 
         window.onpopstate = (event) => {
@@ -414,14 +422,20 @@
              showToast("Refreshed!");
         }
 
-        // --- AUDIO ENGINE ---
+        // --- AUDIO ENGINE (FIXED BREAKING) ---
         function initAudioContext() {
             if (audioCtx) return; 
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             audioCtx = new AudioContext();
             audioSource = audioCtx.createMediaElementSource(audio);
             
-            let prevNode = audioSource;
+            // 1. HEADROOM GAIN (Prevents Distortion)
+            preGainNode = audioCtx.createGain();
+            preGainNode.gain.value = 0.7; // Reduce volume before boosting bass
+            audioSource.connect(preGainNode);
+
+            // 2. EQ Chain
+            let prevNode = preGainNode;
             eqBands = [];
             
             djFrequencies.forEach((freq, index) => {
@@ -436,10 +450,11 @@
                 eqBands.push(filter);
             });
 
+            // 3. Compressor
             compressorNode = audioCtx.createDynamicsCompressor();
             compressorNode.threshold.value = -24;
             compressorNode.knee.value = 30;
-            compressorNode.ratio.value = 12; 
+            compressorNode.ratio.value = 12;
             compressorNode.attack.value = 0.003; 
             compressorNode.release.value = 0.25;
             
@@ -452,10 +467,10 @@
             const btn = document.getElementById('dj-btn');
             if (isDJMode) {
                 btn.classList.add('active');
-                showToast("Premium Enhancement : ON");
+                showToast("Bass Boost: ON");
             } else {
                 btn.classList.remove('active');
-                showToast("Premium Enhancement : OFF");
+                showToast("Bass Boost: OFF");
             }
             if (!audioCtx) initAudioContext();
             if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -540,8 +555,14 @@
 
         // --- DATA ---
         async function fetchData() {
-            if(!navigator.onLine) { renderHome(); return; }
+            if(!navigator.onLine) {
+                 // Offline Mode - just render what we have
+                 renderHome();
+                 return; 
+            }
+            
             if(onlinePlaylists.length === 0) loader.style.display = 'block';
+            
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -550,7 +571,10 @@
                 if(!response.ok) throw new Error("Network error");
                 const text = await response.text();
                 parseDatabase(text);
-            } catch (error) { console.log("Fetch failed or timed out"); }
+            } catch (error) { 
+                console.log("Fetch failed or timed out (Offline mode)"); 
+            }
+            
             loader.style.display = 'none';
             renderHome();
         }
@@ -595,8 +619,10 @@
         function renderHome() {
             mergePlaylists();
             libraryGrid.innerHTML = '';
-            const isOfflineMode = !navigator.onLine || onlinePlaylists.length === 0;
+            // Only filter if truly no online data
+            const isOfflineMode = (onlinePlaylists.length === 0);
             displayPlaylists = isOfflineMode ? allPlaylists.filter(p => p.isDownloads) : allPlaylists;
+            
             displayPlaylists.forEach((pl) => {
                 const originalIndex = allPlaylists.indexOf(pl);
                 const card = document.createElement('div');
@@ -641,7 +667,7 @@
             requestAnimationFrame(() => { if (element.scrollWidth > element.parentElement.offsetWidth) element.classList.add('scroll'); });
         }
 
-        // --- AUDIO PLAYBACK ---
+        // --- AUDIO PLAYBACK (FIXED NOTIFICATION) ---
         async function playSong(plIndex, sIndex) {
             if(!audioCtx) initAudioContext();
             if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
@@ -651,7 +677,10 @@
             const song = allPlaylists[plIndex].songs[sIndex];
             player.originalUrl = song.url;
             
-            // SET METADATA EARLY FOR LOCKSCREEN
+            // 1. CLEAR OLD METADATA FIRST (Fixes Ghost Notification)
+            if('mediaSession' in navigator) navigator.mediaSession.metadata = null;
+
+            // 2. SET NEW METADATA (Immediately)
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
                     title: song.title, artist: "Ayush@8481", album: "Music8481",
@@ -666,6 +695,8 @@
                 const newRow = document.querySelector(`#playlist-songs > div:nth-child(${sIndex + 1})`);
                 if(newRow) newRow.classList.add('playing');
             }
+            
+            // 3. LOAD AUDIO
             const offlineBlob = await getBlob(song.url);
             if (offlineBlob) { audio.src = URL.createObjectURL(offlineBlob); document.getElementById('offline-badge').style.display = 'block'; } 
             else { audio.src = song.url; document.getElementById('offline-badge').style.display = 'none'; }
@@ -678,9 +709,9 @@
             }).catch(e => { if(!offlineBlob && !navigator.onLine) showToast("Network Error"); });
         }
 
-        // --- REAL-TIME NOTIFICATION CONTROL ---
+        // --- REAL-TIME NOTIFICATION CONTROL (FIXED DURATION) ---
         function updatePositionState() {
-            if ('mediaSession' in navigator && audio.duration && !isNaN(audio.duration) && isFinite(audio.duration)) {
+            if ('mediaSession' in navigator && isFinite(audio.duration) && !isNaN(audio.duration)) {
                 navigator.mediaSession.setPositionState({
                     duration: audio.duration,
                     playbackRate: audio.playbackRate,
@@ -693,7 +724,6 @@
             if (!('mediaSession' in navigator)) return;
             navigator.mediaSession.playbackState = player.isPlaying ? "playing" : "paused";
             
-            // Define all handlers to FORCE the seek bar to appear
             navigator.mediaSession.setActionHandler('play', () => audio.play());
             navigator.mediaSession.setActionHandler('pause', () => audio.pause());
             navigator.mediaSession.setActionHandler('nexttrack', nextSong);
@@ -711,17 +741,16 @@
         audio.addEventListener('play', () => { player.isPlaying = true; updateMediaSession(); updatePlayerUI(); });
         audio.addEventListener('pause', () => { player.isPlaying = false; updateMediaSession(); updatePlayerUI(); });
         audio.addEventListener('ended', () => { if(isLoop) { audio.currentTime = 0; audio.play(); } else nextSong(); });
-        audio.addEventListener('loadedmetadata', () => { 
-            if(!isNaN(audio.duration)) { 
-                document.getElementById('dur-time').innerText = formatTime(audio.duration); 
-                seekSlider.max = audio.duration; 
-                updatePositionState(); 
-            } 
-        });
-        audio.addEventListener('durationchange', updatePositionState);
-        audio.addEventListener('ratechange', updatePositionState);
-        audio.addEventListener('seeked', updatePositionState);
         
+        // DURATION FIX: ONLY UPDATE IF VALID
+        audio.addEventListener('durationchange', () => {
+             if(isFinite(audio.duration)) {
+                 document.getElementById('dur-time').innerText = formatTime(audio.duration); 
+                 seekSlider.max = audio.duration;
+                 updatePositionState();
+             }
+        });
+
         audio.addEventListener('timeupdate', () => { 
             const curr = audio.currentTime; 
             if(!isNaN(curr)) { 
@@ -731,6 +760,8 @@
                 document.getElementById('curr-time').innerText = formatTime(curr); 
             } 
         });
+
+        audio.addEventListener('seeked', updatePositionState);
 
         function togglePlay() { if(audio.paused) audio.play(); else audio.pause(); }
         function nextSong() {
