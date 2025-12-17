@@ -3,18 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Music8481</title>
+    <title>Music@8481</title>
     
     <!-- PWA Settings -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0f1014">
-    <meta name="application-name" content="Music8481">
-    
+    <meta name="application-name" content="Music@8481">
+    <meta name="description" content="Offline Music Player">
+
     <!-- ICONS -->
     <link rel="apple-touch-icon" href="https://ayush8481-dev.github.io/Temp/IMG_20251216_201906.jpg">
     <link rel="icon" type="image/jpeg" href="https://ayush8481-dev.github.io/Temp/IMG_20251216_201906.jpg">
+
+    <!-- MANIFEST (Embedded for Single File functionality) -->
+    <link rel="manifest" id="my-manifest">
 
     <!-- Styles & Libs -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -181,7 +185,7 @@
     <!-- SETUP / PROFILE SCREEN -->
     <div id="setup-screen" class="setup-overlay" style="display: none;">
         <div class="setup-card">
-            <h1 class="setup-title">Music8481</h1>
+            <h1 class="setup-title">Music@8481</h1>
             <div style="margin-bottom: 20px;">
                 <img id="preview-img" src="https://www.pngfind.com/pngs/m/610-6104451_image-placeholder-png-user-profile-placeholder-image-png.png" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:2px solid var(--accent);">
                 <br>
@@ -223,7 +227,7 @@
                 <div class="profile-section" id="profile-trigger">
                     <img id="header-profile-img" src="https://www.pngfind.com/pngs/m/610-6104451_image-placeholder-png-user-profile-placeholder-image-png.png" class="profile-pic">
                     <div class="header-text">
-                        <div class="app-brand">Music8481</div>
+                        <div class="app-brand">Music@8481</div>
                         <div class="user-greeting" id="display-name">Guest User</div>
                     </div>
                 </div>
@@ -240,7 +244,7 @@
         <div id="view-playlist" class="screen">
             <div class="playlist-header-lg" id="ph-bg">
                 <div class="header-overlay"></div>
-                <button class="back-btn" onclick="goHome()"><i class="fas fa-arrow-left"></i></button>
+                <button class="back-btn" onclick="handleBackAction()"><i class="fas fa-arrow-left"></i></button>
                 <div class="ph-content">
                     <div style="font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 5px;">PLAYLIST</div>
                     <div class="marquee-container" style="width: 100%;">
@@ -267,7 +271,7 @@
     <!-- FULL PLAYER -->
     <div class="full-player" id="full-player">
         <div class="fp-top">
-            <button class="btn-ctrl" onclick="closeFullPlayer()"><i class="fas fa-chevron-down"></i></button>
+            <button class="btn-ctrl" onclick="handleBackAction()"><i class="fas fa-chevron-down"></i></button>
             <div style="font-size: 12px; letter-spacing: 1px; color: #ccc;">NOW PLAYING</div>
             <button class="btn-ctrl" onclick="openOptionsMenu()"><i class="fas fa-ellipsis-v"></i></button>
         </div>
@@ -312,28 +316,65 @@
     </div>
 
     <script>
+        const APP_NAME = "Music@8481";
+        const APP_ICON = "https://ayush8481-dev.github.io/Temp/IMG_20251216_201906.jpg";
         const DEFAULT_IMG = "https://www.pngfind.com/pngs/m/610-6104451_image-placeholder-png-user-profile-placeholder-image-png.png";
-        const NEW_LOGO = "https://ayush8481-dev.github.io/Temp/IMG_20251216_201906.jpg";
         
+        // --- MANIFEST INJECTION ---
+        const manifestContent = {
+            "name": APP_NAME,
+            "short_name": APP_NAME,
+            "start_url": ".",
+            "display": "standalone",
+            "background_color": "#0f1014",
+            "theme_color": "#0f1014",
+            "icons": [{ "src": APP_ICON, "sizes": "512x512", "type": "image/jpeg" }]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifestContent)], {type: 'application/json'});
+        document.getElementById('my-manifest').href = URL.createObjectURL(manifestBlob);
+
+        // --- ASSETS FOR OFFLINE CACHING ---
         const ASSETS = [
             DEFAULT_IMG,
-            NEW_LOGO,
-            "https://ayush8481-dev.github.io/Temp/IMG_20251215_203700.jpg",
-            "https://ayush8481-dev.github.io/Temp/IMG_20251215_181901.jpg"
+            APP_ICON,
+            "https://ayush8481-dev.github.io/Temp/IMG_20251215_203700.jpg", // Fav Playlist Banner
+            "https://ayush8481-dev.github.io/Temp/IMG_20251215_181901.jpg", // Download Playlist Banner
+            "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css",
+            "https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap",
+            "https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css",
+            "https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"
         ];
 
         // --- SERVICE WORKER ---
         if ('serviceWorker' in navigator) {
             const swContent = `
-                const CACHE_NAME = 'm8481-static-v12';
+                const CACHE_NAME = 'm8481-v13';
                 const ASSETS = ${JSON.stringify(ASSETS)};
+                
                 self.addEventListener('install', (e) => {
                     self.skipWaiting();
                     e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));
                 });
+                
                 self.addEventListener('activate', (e) => { e.waitUntil(self.clients.claim()); });
+                
                 self.addEventListener('fetch', (e) => {
-                    e.respondWith(caches.match(e.request).then(cached => cached || fetch(e.request).catch(() => {})));
+                    if (e.request.method !== 'GET') return;
+                    e.respondWith(
+                        caches.match(e.request).then(cached => {
+                            if (cached) return cached;
+                            return fetch(e.request).then(response => {
+                                // Cache Font Awesome/Google Fonts on fly
+                                if(e.request.url.includes('cdnjs') || e.request.url.includes('fonts.googleapis') || e.request.url.includes('fonts.gstatic')) {
+                                    const clone = response.clone();
+                                    caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+                                }
+                                return response;
+                            }).catch(() => {
+                                // Fallback logic could go here
+                            });
+                        })
+                    );
                 });
             `;
             const blob = new Blob([swContent], {type: 'text/javascript'});
@@ -343,7 +384,7 @@
         async function cacheEssentialAssets() {
             if('caches' in window) {
                 try {
-                    const cache = await caches.open('m8481-static-v12');
+                    const cache = await caches.open('m8481-v13');
                     await cache.addAll(ASSETS);
                 } catch(e) {}
             }
@@ -438,15 +479,22 @@
                 document.getElementById('setup-screen').style.display = 'flex';
             }
             
-            window.history.pushState({page: 'home'}, null, '');
+            // --- SMART BACK BUTTON LOGIC ---
+            window.history.replaceState({page: 'home'}, null, '');
+
             window.addEventListener('popstate', (e) => {
+                const state = e.state || {};
+                
+                // If Full Player is active, close it (minimize)
                 if(fullPlayer.classList.contains('active')) {
                     fullPlayer.classList.remove('active');
-                    window.history.pushState({page: 'home'}, null, '');
-                } else if(viewPlaylist.classList.contains('active')) {
+                    // We consume the event, music keeps playing
+                } 
+                // If Playlist is active, go back to Home
+                else if(viewPlaylist.classList.contains('active')) {
                     viewPlaylist.classList.remove('active');
                     viewHome.classList.add('active');
-                    window.history.pushState({page: 'home'}, null, '');
+                    renderHome();
                 }
             });
 
@@ -457,6 +505,11 @@
             fetchData();
             window.addEventListener('online', () => { showToast("Back Online"); fetchData(); });
         })();
+
+        // Helper to trigger back logic manually from UI buttons
+        function handleBackAction() {
+            window.history.back();
+        }
 
         async function manualSync() {
              showToast("Refreshing...");
@@ -531,9 +584,6 @@
             }
 
             // Determine classes based on direction
-            // direction 'next': Old goes Left (exit-left), New comes from Right (enter-right)
-            // direction 'prev': Old goes Right (exit-right), New comes from Left (enter-left)
-            
             const exitClass = direction === 'next' ? 'exit-left' : 'exit-right';
             const enterClass = direction === 'next' ? 'enter-right' : 'enter-left';
             
@@ -608,8 +658,8 @@
             isDJMode = !isDJMode;
             localStorage.setItem('m8_dj_mode', isDJMode);
             const btn = document.getElementById('dj-btn');
-            if (isDJMode) { btn.classList.add('active'); showToast("Enhanced"); } 
-            else { btn.classList.remove('active'); showToast("Original"); }
+            if (isDJMode) { btn.classList.add('active'); showToast("Bass Boost: ON"); } 
+            else { btn.classList.remove('active'); showToast("Bass Boost: OFF"); }
             if (!audioCtx) initAudioContext();
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const now = audioCtx.currentTime;
@@ -746,9 +796,15 @@
         function renderHome() {
             mergePlaylists();
             libraryGrid.innerHTML = '';
-            const isOfflineMode = (onlinePlaylists.length === 0);
+            // If offline, only show playlists that have songs or are Downloads
+            const isOfflineMode = (!navigator.onLine && onlinePlaylists.length === 0);
             displayPlaylists = isOfflineMode ? allPlaylists.filter(p => p.isDownloads) : allPlaylists;
             
+            if(displayPlaylists.length === 0) {
+                 libraryGrid.innerHTML = '<div style="grid-column: span 2; text-align:center; padding:20px; color:#666;">No Offline Content Available</div>';
+                 return;
+            }
+
             const cardImages = [];
             
             displayPlaylists.forEach((pl) => {
@@ -795,12 +851,9 @@
             viewHome.classList.remove('active');
             viewPlaylist.classList.add('active');
             window.scrollTo(0,0);
-        }
-
-        function goHome() { 
-            viewPlaylist.classList.remove('active'); 
-            viewHome.classList.add('active'); 
-            renderHome();
+            
+            // Push state for Smart Back Button
+            window.history.pushState({view: 'playlist'}, null, '#playlist');
         }
 
         function checkMarquee(element, text) {
@@ -814,12 +867,10 @@
             if(!audioCtx) initAudioContext();
             if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
             
-            // ATOMIC QUEUE UPDATE
             player.queue = [...allPlaylists[plIndex].songs];
             player.songIndex = sIndex;
             
-            // Init the image manually for first click
-            imgContainer.innerHTML = ''; // clear
+            imgContainer.innerHTML = ''; 
             const img = document.createElement('img');
             img.src = player.queue[sIndex].image;
             img.className = 'fp-img active';
@@ -836,16 +887,15 @@
             player.originalUrl = song.url;
             
             updateMediaSession(song);
-            updatePlayerUI(); // Updates title, heart, etc.
+            updatePlayerUI();
             document.getElementById('mini-player').classList.add('show');
             
-            // Check Preloaded
             if(usePreloaded && nextSongBlobUrl) {
                 audio.src = nextSongBlobUrl;
                 nextSongBlobUrl = null;
             } else {
                 const offlineBlob = await getBlob(song.url);
-                if(currentSession !== playSessionId) return; // RACE CONDITION CHECK
+                if(currentSession !== playSessionId) return;
 
                 if (offlineBlob) { audio.src = URL.createObjectURL(offlineBlob); document.getElementById('offline-badge').style.display = 'block'; } 
                 else { audio.src = song.url; document.getElementById('offline-badge').style.display = 'none'; }
@@ -873,7 +923,7 @@
             } catch(e) {}
         }
 
-        // --- MEDIA SESSION ---
+        // --- MEDIA SESSION & SYNC ---
         function updatePositionState() {
             if ('mediaSession' in navigator && isFinite(audio.duration) && !isNaN(audio.duration)) {
                 navigator.mediaSession.setPositionState({
@@ -890,7 +940,7 @@
             if(!song) return;
 
             navigator.mediaSession.metadata = new MediaMetadata({
-                title: song.title, artist: "Ayush@8481", album: "Music8481",
+                title: song.title, artist: "Ayush@8481", album: "Music@8481",
                 artwork: [{ src: song.image, sizes: '512x512', type: 'image/jpeg' }]
             });
 
@@ -902,14 +952,31 @@
             navigator.mediaSession.setActionHandler('seekbackward', (d) => { audio.currentTime = Math.max(audio.currentTime - (d.seekOffset || 10), 0); });
             navigator.mediaSession.setActionHandler('seekforward', (d) => { audio.currentTime = Math.min(audio.currentTime + (d.seekOffset || 10), audio.duration); });
             navigator.mediaSession.setActionHandler('seekto', (d) => { if (d.fastSeek && 'fastSeek' in audio) audio.fastSeek(d.seekTime); else audio.currentTime = d.seekTime; updatePositionState(); });
-            updatePositionState();
         }
 
         audio.addEventListener('play', () => { player.isPlaying = true; updateMediaSession(); updatePlayerUI(); });
         audio.addEventListener('pause', () => { player.isPlaying = false; updateMediaSession(); updatePlayerUI(); });
         audio.addEventListener('ended', () => { if(isLoop) { audio.currentTime = 0; audio.play(); } else nextSong(true); });
-        audio.addEventListener('durationchange', () => { if(isFinite(audio.duration)) { document.getElementById('dur-time').innerText = formatTime(audio.duration); seekSlider.max = audio.duration; updatePositionState(); } });
-        audio.addEventListener('timeupdate', () => { const curr = audio.currentTime; if(!isNaN(curr)) { seekSlider.value = curr; const percentage = (curr / seekSlider.max) * 100; seekSlider.style.backgroundSize = `${percentage}% 100%`; document.getElementById('curr-time').innerText = formatTime(curr); } });
+        audio.addEventListener('durationchange', () => { 
+            if(isFinite(audio.duration)) { 
+                document.getElementById('dur-time').innerText = formatTime(audio.duration); 
+                seekSlider.max = audio.duration; 
+                updatePositionState(); 
+            } 
+        });
+        
+        audio.addEventListener('timeupdate', () => { 
+            const curr = audio.currentTime; 
+            if(!isNaN(curr)) { 
+                seekSlider.value = curr; 
+                const percentage = (curr / seekSlider.max) * 100; 
+                seekSlider.style.backgroundSize = `${percentage}% 100%`; 
+                document.getElementById('curr-time').innerText = formatTime(curr);
+                
+                // Sync notification timeline every few seconds roughly
+                if (Math.floor(curr) % 5 === 0) updatePositionState();
+            } 
+        });
         audio.addEventListener('seeked', updatePositionState);
 
         function togglePlay() { if(audio.paused) audio.play(); else audio.pause(); }
@@ -919,18 +986,14 @@
             if (isShuffle) {
                 player.songIndex = Math.floor(Math.random() * player.queue.length);
             } else { 
-                // Circular Loop
                 player.songIndex = (player.songIndex + 1) % player.queue.length;
             }
-            
             if(animate) animateSlide('next', player.queue[player.songIndex]);
             loadAndPlay(true);
         }
         
         function prevSong(animate = false) {
-            // Circular Loop
             player.songIndex = (player.songIndex - 1 + player.queue.length) % player.queue.length;
-            
             if(animate) animateSlide('prev', player.queue[player.songIndex]);
             loadAndPlay();
         }
@@ -985,8 +1048,6 @@
             checkMarquee(document.getElementById('mp-title'), song.title);
             checkMarquee(document.getElementById('fp-title'), song.title);
             
-            // NOTE: We don't update #fp-img src here anymore, handled by animateSlide or manual click init.
-            
             const miniImg = document.getElementById('mp-img');
             miniImg.src = song.image;
             if(player.isPlaying) miniImg.classList.add('spin-anim'); else miniImg.classList.remove('spin-anim');
@@ -994,7 +1055,7 @@
             const heartIcon = document.getElementById('fp-heart');
             if(isLiked) { heartIcon.classList.add('fas', 'liked'); heartIcon.classList.remove('far'); }
             else { heartIcon.classList.remove('fas', 'liked'); heartIcon.classList.add('far'); }
-            document.title = player.isPlaying ? `${song.title} - Music8481` : 'Music8481';
+            document.title = player.isPlaying ? `${song.title} - Music@8481` : 'Music@8481';
         }
 
         function formatTime(s) { const m = Math.floor(s / 60); const sec = Math.floor(s % 60); return `${m}:${sec < 10 ? '0'+sec : sec}`; }
@@ -1008,8 +1069,11 @@
             mergePlaylists();
         }
 
-        function openFullPlayer() { fullPlayer.classList.add('active'); }
-        function closeFullPlayer() { fullPlayer.classList.remove('active'); }
+        function openFullPlayer() { 
+            fullPlayer.classList.add('active'); 
+            // Push state for Smart Back Button
+            window.history.pushState({view: 'player'}, null, '#player');
+        }
         function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
     </script>
 </body>
