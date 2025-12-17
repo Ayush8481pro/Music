@@ -16,9 +16,6 @@
     <link rel="apple-touch-icon" href="https://ayush8481-dev.github.io/Temp/IMG_20251216_201906.jpg">
     <link rel="icon" type="image/jpeg" href="https://ayush8481-dev.github.io/Temp/IMG_20251216_201906.jpg">
 
-    <!-- MANIFEST -->
-    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIk11c2ljODQ4MSIsCiAgInNob3J0X25hbWUiOiAiTXVzaWM4NDgxIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwZjEwMTQiLAogICJ0aGVtZV9jb2xvciI6ICIjMGYxMDE0IiwKICAib3JpZW50YXRpb24iOiAicG9ydHJhaXQiLAogICJzY29wZSI6ICIuIiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiaHR0cHM6Ly9heXVzaDg0ODEtZGV2LmdpdGh1Yi5pby9UZW1wL0lNR18yMDI1MTIxNl8yMDE5MDYuanBnIiwKICAgICAgInNpemVzIjogIjUxMng1MTIiLAogICAgICJ0eXBlIjogImltYWdlL2pwZWciCiAgICB9CiAgXQp9">
-
     <!-- Styles & Libs -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -52,7 +49,8 @@
         .playlist-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px; }
         .playlist-card { background: var(--bg-card); padding: 10px; border-radius: 8px; cursor: pointer; transition: transform 0.1s; }
         .playlist-card:active { transform: scale(0.98); }
-        .pc-img { width: 100%; aspect-ratio: 1/1; border-radius: 6px; object-fit: cover; margin-bottom: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .pc-img { width: 100%; aspect-ratio: 1/1; border-radius: 6px; object-fit: cover; margin-bottom: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); opacity: 0; transition: opacity 0.3s ease; }
+        .pc-img.loaded { opacity: 1; }
         .pc-title { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .pc-desc { font-size: 11px; color: var(--secondary); margin-top: 2px; }
 
@@ -71,7 +69,8 @@
         .song-list { padding: 10px 0; }
         .song-row { display: flex; align-items: center; padding: 12px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; overflow: hidden; }
         .song-row:active { background: rgba(255,255,255,0.05); }
-        .sr-img { width: 45px; height: 45px; border-radius: 4px; object-fit: cover; margin-right: 15px; background: #333; flex-shrink: 0; }
+        .sr-img { width: 45px; height: 45px; border-radius: 4px; object-fit: cover; margin-right: 15px; background: #333; flex-shrink: 0; opacity: 0; transition: opacity 0.2s; }
+        .sr-img.loaded { opacity: 1; }
         .sr-info { flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; margin-right: 10px; overflow: hidden; }
         .sr-title { font-size: 15px; font-weight: 600; color: white; white-space: nowrap; display: inline-block; }
         .sr-artist { font-size: 12px; color: var(--secondary); }
@@ -87,13 +86,49 @@
         .mp-title { font-size: 14px; font-weight: 600; }
         .mp-ctrl { background: none; border: none; color: white; font-size: 22px; padding: 10px; cursor: pointer; z-index: 2; }
 
-        /* FULL PLAYER */
+        /* FULL PLAYER & ANIMATION */
         @keyframes premiumFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         .full-player { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #263238, #880e4f, #37474f, #1a237e, #000000); background-size: 300% 300%; animation: premiumFlow 15s ease infinite; z-index: 2000; padding: 25px; display: flex; flex-direction: column; justify-content: space-evenly; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
         .full-player.active { transform: translateY(0); }
         .fp-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-shrink: 0; }
-        .fp-img-container { width: 100%; display: flex; justify-content: center; align-items: center; flex-grow: 1; max-height: 45vh; margin: 10px 0; position: relative; }
-        .fp-img { width: auto; height: 100%; max-width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
+        
+        /* UPDATED CAROUSEL CONTAINER */
+        .fp-img-container { 
+            width: 100%; 
+            height: 45vh; 
+            max-height: 400px; 
+            margin: 10px 0; 
+            position: relative; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            perspective: 1000px;
+            overflow: visible; 
+        }
+
+        /* IMAGES ABSOLUTE POSITIONED FOR STACKING */
+        .fp-img { 
+            position: absolute;
+            width: auto; 
+            height: 100%; 
+            aspect-ratio: 1/1; 
+            object-fit: cover; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6); 
+            will-change: transform, opacity;
+            transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.4s ease;
+        }
+
+        /* ANIMATION STATES */
+        .fp-img.active { transform: translateX(0) scale(1) rotate(0deg); opacity: 1; z-index: 2; }
+        .fp-img.enter-right { transform: translateX(100%) scale(0.8) rotate(10deg); opacity: 0; z-index: 1; }
+        .fp-img.enter-left { transform: translateX(-100%) scale(0.8) rotate(-10deg); opacity: 0; z-index: 1; }
+        .fp-img.exit-left { transform: translateX(-120%) rotate(-20deg); opacity: 0; z-index: 2; }
+        .fp-img.exit-right { transform: translateX(120%) rotate(20deg); opacity: 0; z-index: 2; }
+        
+        /* Disable transition during drag */
+        .fp-img.dragging { transition: none !important; }
+
         .fp-info { margin-bottom: 20px; overflow: hidden; width: 100%; flex-shrink: 0; }
         .fp-title { font-size: 22px; font-weight: 700; margin-bottom: 5px; line-height: 1.2; display: inline-block; }
         .fp-artist { color: var(--secondary); font-size: 16px; }
@@ -236,9 +271,12 @@
             <div style="font-size: 12px; letter-spacing: 1px; color: #ccc;">NOW PLAYING</div>
             <button class="btn-ctrl" onclick="openOptionsMenu()"><i class="fas fa-ellipsis-v"></i></button>
         </div>
-        <div class="fp-img-container">
-            <img src="" class="fp-img" id="fp-img">
+        
+        <!-- SWIPE AREA: Dynamic Container -->
+        <div class="fp-img-container" id="fp-img-area">
+            <!-- Images will be injected here dynamically -->
         </div>
+
         <div class="fp-info">
             <div class="marquee-container">
                 <div class="fp-title marquee-text" id="fp-title">Title</div>
@@ -287,7 +325,7 @@
         // --- SERVICE WORKER ---
         if ('serviceWorker' in navigator) {
             const swContent = `
-                const CACHE_NAME = 'm8481-static-v9';
+                const CACHE_NAME = 'm8481-static-v12';
                 const ASSETS = ${JSON.stringify(ASSETS)};
                 self.addEventListener('install', (e) => {
                     self.skipWaiting();
@@ -305,7 +343,7 @@
         async function cacheEssentialAssets() {
             if('caches' in window) {
                 try {
-                    const cache = await caches.open('m8481-static-v9');
+                    const cache = await caches.open('m8481-static-v12');
                     await cache.addAll(ASSETS);
                 } catch(e) {}
             }
@@ -358,18 +396,19 @@
         let userProfile = JSON.parse(localStorage.getItem('userProfile')) || null;
         let viewingPlaylistIndex = -1;
         
-        // ** NEW: QUEUE SYSTEM TO ISOLATE PLAYLISTS **
         let player = { queue: [], songIndex: 0, originalUrl: "", isPlaying: false };
-        
+        let playSessionId = 0; 
+
         let isShuffle = false;
         let isLoop = false;
+        let isDJMode = JSON.parse(localStorage.getItem('m8_dj_mode')) || false; 
         
-        let isDJMode = false;
         let audioCtx;
         let audioSource;
         let eqBands = [];
         let compressorNode;
         let preGainNode;
+        let nextSongBlobUrl = null;
 
         const djFrequencies = [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
         const djGains = [5, 15, 5, 0, -2, 0, 2, 2, 1, 3]; 
@@ -399,29 +438,22 @@
                 document.getElementById('setup-screen').style.display = 'flex';
             }
             
-            // HISTORY TRAP: KEEP APP OPEN ON BACK BUTTON
-            window.history.pushState({page: 'app'}, null, '');
+            window.history.pushState({page: 'home'}, null, '');
             window.addEventListener('popstate', (e) => {
-                // If a modal is open, close it
                 if(fullPlayer.classList.contains('active')) {
                     fullPlayer.classList.remove('active');
-                    window.history.pushState({page: 'app'}, null, '');
-                    return;
-                }
-                if(viewPlaylist.classList.contains('active')) {
+                    window.history.pushState({page: 'home'}, null, '');
+                } else if(viewPlaylist.classList.contains('active')) {
                     viewPlaylist.classList.remove('active');
                     viewHome.classList.add('active');
-                    window.history.pushState({page: 'app'}, null, '');
-                    return;
+                    window.history.pushState({page: 'home'}, null, '');
                 }
-                // If on Home, keep user there (prevent exit)
-                window.history.pushState({page: 'app'}, null, '');
             });
 
-            // RENDER LOCAL DATA INSTANTLY
+            if(isDJMode) document.getElementById('dj-btn').classList.add('active');
+
             mergePlaylists();
             renderHome(); 
-
             fetchData();
             window.addEventListener('online', () => { showToast("Back Online"); fetchData(); });
         })();
@@ -433,21 +465,124 @@
              showToast("Refreshed!");
         }
 
+        // --- NEW SWIPE GESTURES & CAROUSEL ---
+        let startX, currentX, isDragging = false;
+        const imgContainer = document.getElementById('fp-img-area');
+        
+        function getActiveImg() {
+            return imgContainer.querySelector('.fp-img.active');
+        }
+
+        imgContainer.addEventListener('touchstart', e => {
+            const activeImg = getActiveImg();
+            if(!activeImg) return;
+            startX = e.touches[0].clientX;
+            isDragging = true;
+            activeImg.classList.add('dragging'); // Disable transition for instant drag
+        }, {passive: false});
+
+        imgContainer.addEventListener('touchmove', e => {
+            if(!isDragging) return;
+            const activeImg = getActiveImg();
+            if(!activeImg) return;
+            e.preventDefault(); 
+            currentX = e.touches[0].clientX;
+            const diff = currentX - startX;
+            const rotate = diff / 20;
+            // Only move the active image
+            activeImg.style.transform = `translateX(${diff}px) rotate(${rotate}deg)`;
+        }, {passive: false});
+
+        imgContainer.addEventListener('touchend', e => {
+            if(!isDragging) return;
+            isDragging = false;
+            const activeImg = getActiveImg();
+            if(!activeImg) return;
+            
+            activeImg.classList.remove('dragging');
+            
+            const diff = currentX - startX;
+            const threshold = 80;
+
+            if (diff < -threshold) {
+                // Swipe Left -> Next Song (Old image goes Left, New comes from Right)
+                activeImg.style.transform = ''; // Clear inline styles
+                nextSong(true); // pass true for animation
+            } else if (diff > threshold) {
+                // Swipe Right -> Prev Song (Old image goes Right, New comes from Left)
+                activeImg.style.transform = '';
+                prevSong(true);
+            } else {
+                // Reset to center
+                activeImg.style.transform = '';
+            }
+        });
+
+        // --- ANIMATION LOGIC ---
+        function animateSlide(direction, newSong) {
+            const oldImg = getActiveImg();
+            if(!oldImg) {
+                // First load
+                const img = document.createElement('img');
+                img.src = newSong.image;
+                img.className = 'fp-img active';
+                imgContainer.appendChild(img);
+                return;
+            }
+
+            // Determine classes based on direction
+            // direction 'next': Old goes Left (exit-left), New comes from Right (enter-right)
+            // direction 'prev': Old goes Right (exit-right), New comes from Left (enter-left)
+            
+            const exitClass = direction === 'next' ? 'exit-left' : 'exit-right';
+            const enterClass = direction === 'next' ? 'enter-right' : 'enter-left';
+            
+            // Animate Old Out
+            oldImg.classList.remove('active');
+            oldImg.classList.add(exitClass);
+
+            // Create New Image
+            const newImg = document.createElement('img');
+            newImg.src = newSong.image;
+            newImg.className = `fp-img ${enterClass}`;
+            imgContainer.appendChild(newImg);
+
+            // Force Reflow
+            void newImg.offsetWidth;
+
+            // Animate New In
+            newImg.classList.remove(enterClass);
+            newImg.classList.add('active');
+
+            // Cleanup Old
+            setTimeout(() => {
+                if(oldImg && oldImg.parentNode) oldImg.parentNode.removeChild(oldImg);
+            }, 400);
+        }
+
+        // --- SERIAL IMAGE LOADING ---
+        async function loadImagesSequentially(images) {
+            for (let img of images) {
+                if (!img.dataset.src) continue;
+                await new Promise((resolve) => {
+                    img.onload = () => { img.classList.add('loaded'); resolve(); };
+                    img.onerror = resolve;
+                    img.src = img.dataset.src;
+                });
+            }
+        }
+
         // --- AUDIO ENGINE ---
         function initAudioContext() {
             if (audioCtx) return; 
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             audioCtx = new AudioContext();
             audioSource = audioCtx.createMediaElementSource(audio);
-            
-            // HEADROOM GAIN (Fixes Distortion)
             preGainNode = audioCtx.createGain();
             preGainNode.gain.value = 0.7; 
             audioSource.connect(preGainNode);
-
             let prevNode = preGainNode;
             eqBands = [];
-            
             djFrequencies.forEach((freq, index) => {
                 const filter = audioCtx.createBiquadFilter();
                 filter.frequency.value = freq;
@@ -459,23 +594,22 @@
                 prevNode = filter;
                 eqBands.push(filter);
             });
-
             compressorNode = audioCtx.createDynamicsCompressor();
             compressorNode.threshold.value = -24;
             compressorNode.knee.value = 30;
             compressorNode.ratio.value = 12;
             compressorNode.attack.value = 0.003; 
             compressorNode.release.value = 0.25;
-            
             prevNode.connect(compressorNode);
             compressorNode.connect(audioCtx.destination);
         }
 
         function toggleDJMode() {
             isDJMode = !isDJMode;
+            localStorage.setItem('m8_dj_mode', isDJMode);
             const btn = document.getElementById('dj-btn');
-            if (isDJMode) { btn.classList.add('active'); showToast("Bass Boost: ON"); } 
-            else { btn.classList.remove('active'); showToast("Bass Boost: OFF"); }
+            if (isDJMode) { btn.classList.add('active'); showToast("Enhanced"); } 
+            else { btn.classList.remove('active'); showToast("Original"); }
             if (!audioCtx) initAudioContext();
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const now = audioCtx.currentTime;
@@ -534,11 +668,9 @@
             const img = document.getElementById('preview-img').src;
             if(!name) { alert("Please enter a name"); return; }
             userProfile = { name: name, image: img };
-            try {
-                localStorage.setItem('userProfile', JSON.stringify(userProfile));
-                document.getElementById('setup-screen').style.display = 'none';
-                loadProfileUI();
-            } catch(e) { alert("Image too large!"); }
+            localStorage.setItem('userProfile', JSON.stringify(userProfile));
+            document.getElementById('setup-screen').style.display = 'none';
+            loadProfileUI();
         }
 
         function skipProfile() {
@@ -617,14 +749,20 @@
             const isOfflineMode = (onlinePlaylists.length === 0);
             displayPlaylists = isOfflineMode ? allPlaylists.filter(p => p.isDownloads) : allPlaylists;
             
+            const cardImages = [];
+            
             displayPlaylists.forEach((pl) => {
                 const originalIndex = allPlaylists.indexOf(pl);
                 const card = document.createElement('div');
                 card.className = 'playlist-card';
                 card.onclick = () => openPlaylist(originalIndex);
-                card.innerHTML = `<img src="${pl.banner || 'https://via.placeholder.com/150'}" class="pc-img"><div class="pc-title">${pl.name}</div><div class="pc-desc">${pl.songs.length} Songs</div>`;
+                const bannerSrc = pl.banner || 'https://via.placeholder.com/150';
+                card.innerHTML = `<img data-src="${bannerSrc}" class="pc-img"><div class="pc-title">${pl.name}</div><div class="pc-desc">${pl.songs.length} Songs</div>`;
                 libraryGrid.appendChild(card);
+                cardImages.push(card.querySelector('.pc-img'));
             });
+            
+            loadImagesSequentially(cardImages);
         }
 
         function openPlaylist(index) {
@@ -636,6 +774,9 @@
             const listContainer = document.getElementById('playlist-songs');
             listContainer.innerHTML = '';
             if(pl.songs.length === 0) listContainer.innerHTML = '<div style="padding:20px; color:#666; text-align:center;">No songs here yet.</div>';
+            
+            const rowImages = [];
+            
             pl.songs.forEach((song, sIndex) => {
                 const isDownloaded = downloadedSongs.some(d => d.url === song.url);
                 const isPlayingThis = (song.url === player.originalUrl);
@@ -643,10 +784,14 @@
                 row.className = `song-row ${isPlayingThis ? 'playing' : ''}`;
                 row.onclick = () => playSong(index, sIndex);
                 const titleId = `title-${index}-${sIndex}`;
-                row.innerHTML = `<img src="${song.image}" class="sr-img"><div class="sr-info"><div class="marquee-container" style="width:100%"><div class="sr-title" id="${titleId}">${song.title}</div></div><div class="sr-artist">Ayush@8481</div></div>${isDownloaded ? '<i class="fas fa-check-circle" style="color:var(--accent); font-size:14px;"></i>' : ''}`;
+                row.innerHTML = `<img data-src="${song.image}" class="sr-img"><div class="sr-info"><div class="marquee-container" style="width:100%"><div class="sr-title" id="${titleId}">${song.title}</div></div><div class="sr-artist">Ayush@8481</div></div>${isDownloaded ? '<i class="fas fa-check-circle" style="color:var(--accent); font-size:14px;"></i>' : ''}`;
                 listContainer.appendChild(row);
+                rowImages.push(row.querySelector('.sr-img'));
                 setTimeout(() => { checkMarquee(document.getElementById(titleId), song.title); }, 50);
             });
+            
+            loadImagesSequentially(rowImages);
+            
             viewHome.classList.remove('active');
             viewPlaylist.classList.add('active');
             window.scrollTo(0,0);
@@ -664,51 +809,71 @@
             requestAnimationFrame(() => { if (element.scrollWidth > element.parentElement.offsetWidth) element.classList.add('scroll'); });
         }
 
-        // --- AUDIO PLAYBACK (ISOLATED QUEUE) ---
+        // --- AUDIO PLAYBACK ---
         async function playSong(plIndex, sIndex) {
             if(!audioCtx) initAudioContext();
             if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
             
-            // ISOLATE QUEUE: COPY SONGS FROM CLICKED PLAYLIST
+            // ATOMIC QUEUE UPDATE
             player.queue = [...allPlaylists[plIndex].songs];
             player.songIndex = sIndex;
             
+            // Init the image manually for first click
+            imgContainer.innerHTML = ''; // clear
+            const img = document.createElement('img');
+            img.src = player.queue[sIndex].image;
+            img.className = 'fp-img active';
+            imgContainer.appendChild(img);
+
             loadAndPlay();
         }
 
-        async function loadAndPlay() {
+        async function loadAndPlay(usePreloaded = false) {
+            playSessionId++;
+            const currentSession = playSessionId;
+
             const song = player.queue[player.songIndex];
             player.originalUrl = song.url;
             
-            if('mediaSession' in navigator) navigator.mediaSession.metadata = null;
-            if ('mediaSession' in navigator) {
-                navigator.mediaSession.metadata = new MediaMetadata({
-                    title: song.title, artist: "Ayush@8481", album: "Music8481",
-                    artwork: [{ src: song.image, sizes: '512x512', type: 'image/jpeg' }]
-                });
-            }
-
-            updatePlayerUI();
+            updateMediaSession(song);
+            updatePlayerUI(); // Updates title, heart, etc.
             document.getElementById('mini-player').classList.add('show');
             
-            // Highlight in list if list is visible
-            const rows = document.querySelectorAll('.song-row');
-            rows.forEach(r => r.classList.remove('playing'));
-            // Note: simple highlighting might miss if indices changed, but good enough for now
+            // Check Preloaded
+            if(usePreloaded && nextSongBlobUrl) {
+                audio.src = nextSongBlobUrl;
+                nextSongBlobUrl = null;
+            } else {
+                const offlineBlob = await getBlob(song.url);
+                if(currentSession !== playSessionId) return; // RACE CONDITION CHECK
+
+                if (offlineBlob) { audio.src = URL.createObjectURL(offlineBlob); document.getElementById('offline-badge').style.display = 'block'; } 
+                else { audio.src = song.url; document.getElementById('offline-badge').style.display = 'none'; }
+            }
             
-            const offlineBlob = await getBlob(song.url);
-            if (offlineBlob) { audio.src = URL.createObjectURL(offlineBlob); document.getElementById('offline-badge').style.display = 'block'; } 
-            else { audio.src = song.url; document.getElementById('offline-badge').style.display = 'none'; }
             audio.title = song.title;
-            
-            audio.play().then(() => { 
+            audio.play().then(() => {
                 player.isPlaying = true; 
                 updateMediaSession(); 
-                updatePlayerUI(); 
-            }).catch(e => { if(!offlineBlob && !navigator.onLine) showToast("Network Error"); });
+                updatePlayerUI();
+                preloadNextSong(); 
+            }).catch(e => { if(!navigator.onLine) showToast("Network Error"); });
         }
 
-        // --- DURATION & MEDIA SESSION ---
+        async function preloadNextSong() {
+            let nextIdx = player.songIndex + 1;
+            if (nextIdx >= player.queue.length) nextIdx = 0;
+            const nextSong = player.queue[nextIdx];
+            const hasOffline = await getBlob(nextSong.url);
+            if(hasOffline) return;
+            try {
+                const response = await fetch(nextSong.url);
+                const blob = await response.blob();
+                nextSongBlobUrl = URL.createObjectURL(blob);
+            } catch(e) {}
+        }
+
+        // --- MEDIA SESSION ---
         function updatePositionState() {
             if ('mediaSession' in navigator && isFinite(audio.duration) && !isNaN(audio.duration)) {
                 navigator.mediaSession.setPositionState({
@@ -719,8 +884,16 @@
             }
         }
 
-        function updateMediaSession() {
+        function updateMediaSession(forcedSong = null) {
             if (!('mediaSession' in navigator)) return;
+            const song = forcedSong || player.queue[player.songIndex];
+            if(!song) return;
+
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: song.title, artist: "Ayush@8481", album: "Music8481",
+                artwork: [{ src: song.image, sizes: '512x512', type: 'image/jpeg' }]
+            });
+
             navigator.mediaSession.playbackState = player.isPlaying ? "playing" : "paused";
             navigator.mediaSession.setActionHandler('play', () => audio.play());
             navigator.mediaSession.setActionHandler('pause', () => audio.pause());
@@ -734,45 +907,31 @@
 
         audio.addEventListener('play', () => { player.isPlaying = true; updateMediaSession(); updatePlayerUI(); });
         audio.addEventListener('pause', () => { player.isPlaying = false; updateMediaSession(); updatePlayerUI(); });
-        audio.addEventListener('ended', () => { if(isLoop) { audio.currentTime = 0; audio.play(); } else nextSong(); });
-        
-        audio.addEventListener('durationchange', () => {
-             if(isFinite(audio.duration)) {
-                 document.getElementById('dur-time').innerText = formatTime(audio.duration); 
-                 seekSlider.max = audio.duration;
-                 updatePositionState();
-             }
-        });
-
-        audio.addEventListener('timeupdate', () => { 
-            const curr = audio.currentTime; 
-            if(!isNaN(curr)) { 
-                seekSlider.value = curr; 
-                const percentage = (curr / seekSlider.max) * 100; 
-                seekSlider.style.backgroundSize = `${percentage}% 100%`; 
-                document.getElementById('curr-time').innerText = formatTime(curr); 
-            } 
-        });
-
+        audio.addEventListener('ended', () => { if(isLoop) { audio.currentTime = 0; audio.play(); } else nextSong(true); });
+        audio.addEventListener('durationchange', () => { if(isFinite(audio.duration)) { document.getElementById('dur-time').innerText = formatTime(audio.duration); seekSlider.max = audio.duration; updatePositionState(); } });
+        audio.addEventListener('timeupdate', () => { const curr = audio.currentTime; if(!isNaN(curr)) { seekSlider.value = curr; const percentage = (curr / seekSlider.max) * 100; seekSlider.style.backgroundSize = `${percentage}% 100%`; document.getElementById('curr-time').innerText = formatTime(curr); } });
         audio.addEventListener('seeked', updatePositionState);
 
         function togglePlay() { if(audio.paused) audio.play(); else audio.pause(); }
         
-        function nextSong() {
-            if (isShuffle) player.songIndex = Math.floor(Math.random() * player.queue.length);
-            else { 
-                player.songIndex++; 
-                if(player.songIndex >= player.queue.length) {
-                    player.songIndex = 0;
-                    if(!isLoop) { audio.pause(); return; } // Stop if end of playlist and not looping
-                }
+        // --- NEXT/PREV WITH ANIMATION & LOOP ---
+        function nextSong(animate = false) {
+            if (isShuffle) {
+                player.songIndex = Math.floor(Math.random() * player.queue.length);
+            } else { 
+                // Circular Loop
+                player.songIndex = (player.songIndex + 1) % player.queue.length;
             }
-            loadAndPlay();
+            
+            if(animate) animateSlide('next', player.queue[player.songIndex]);
+            loadAndPlay(true);
         }
         
-        function prevSong() {
-            player.songIndex--; 
-            if(player.songIndex < 0) player.songIndex = player.queue.length - 1;
+        function prevSong(animate = false) {
+            // Circular Loop
+            player.songIndex = (player.songIndex - 1 + player.queue.length) % player.queue.length;
+            
+            if(animate) animateSlide('prev', player.queue[player.songIndex]);
             loadAndPlay();
         }
         
@@ -782,7 +941,6 @@
         seekSlider.addEventListener('input', () => { audio.currentTime = seekSlider.value; });
         seekSlider.addEventListener('change', () => { updatePositionState(); });
 
-        // --- DOWNLOAD/DELETE ---
         async function downloadCurrentSong() {
             const song = player.queue[player.songIndex];
             document.getElementById('options-menu').style.display = 'none';
@@ -794,7 +952,7 @@
                 if (!downloadedSongs.some(d => d.url === song.url)) { downloadedSongs.push(song); localStorage.setItem('my_downloaded_songs', JSON.stringify(downloadedSongs)); }
                 showToast("Downloaded!");
                 document.getElementById('offline-badge').style.display = 'block';
-                mergePlaylists(); // Update lists without reload
+                mergePlaylists(); 
             } catch (e) { showToast("Download Failed."); }
         }
 
@@ -826,7 +984,9 @@
             document.getElementById('fp-play-icon').className = `fas ${iconClass}`;
             checkMarquee(document.getElementById('mp-title'), song.title);
             checkMarquee(document.getElementById('fp-title'), song.title);
-            document.getElementById('fp-img').src = song.image;
+            
+            // NOTE: We don't update #fp-img src here anymore, handled by animateSlide or manual click init.
+            
             const miniImg = document.getElementById('mp-img');
             miniImg.src = song.image;
             if(player.isPlaying) miniImg.classList.add('spin-anim'); else miniImg.classList.remove('spin-anim');
