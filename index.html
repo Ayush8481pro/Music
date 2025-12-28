@@ -1,4 +1,4 @@
-<!-- --- START OF FILE ai_studio_code - 2025-12-28T211500.000.html --- -->
+<!-- --- START OF FILE ai_studio_code - 2025-12-28T214500.000.html --- -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -455,7 +455,7 @@
 
         if ('serviceWorker' in navigator) {
             const swContent = `
-                const CACHE_NAME = 'm8481-v29';
+                const CACHE_NAME = 'm8481-v30';
                 const ASSETS = ${JSON.stringify(ASSETS)};
                 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))); });
                 self.addEventListener('activate', (e) => { e.waitUntil(self.clients.claim()); });
@@ -469,7 +469,7 @@
         }
 
         async function cacheEssentialAssets() {
-            if('caches' in window) { try { const cache = await caches.open('m8481-v29'); await cache.addAll(ASSETS); } catch(e) {} }
+            if('caches' in window) { try { const cache = await caches.open('m8481-v30'); await cache.addAll(ASSETS); } catch(e) {} }
         }
 
         let db;
@@ -556,12 +556,12 @@
         // Tuned for better separation
         const djFrequencies = [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
         
-        // Professional Audio Presets
+        // REFINED PRESETS TO PREVENT CLIPPING
         const eqPresets = [
             [0,0,0,0,0,0,0,0,0,0], // Normal (Flat)
-            [6, 9, 5, -2, -1, 0, 0, 0, 2, 2], // Deep Bass (Boost Sub, Cut Mid-Bass mud, clear highs)
-            [4, 3, 0, -2, -3, 0, 3, 6, 7, 7], // Enhanced (V-Shape: Crisp Highs, Punchy Lows)
-            [5, 5, 3, 0, 0, 0, 0, 2, 4, 4] // 8D Base (Balanced for spatial effects)
+            [6, 5, 2, -2, -2, 0, 1, 2, 3, 3], // Deep Bass (Clean Sub, cut mud, clear highs)
+            [4, 3, 0, -1, -2, 0, 3, 5, 5, 5], // Enhanced (V-Shape: Crisp)
+            [3, 3, 1, 0, 0, 0, 0, 1, 2, 2] // 8D Base
         ];
         
         let audioCtx;
@@ -575,7 +575,7 @@
         let filterNode; 
         let gainNode8D; 
         let pannerInterval;
-        let delayNode; // New for spatial width
+        let delayNode;
 
         let cropper = null;
         const cropModal = document.getElementById('crop-modal');
@@ -866,9 +866,9 @@
             audioSource = audioCtx.createMediaElementSource(audio);
             
             preGainNode = audioCtx.createGain();
-            preGainNode.gain.value = 1.0; 
+            // LOWER GAIN TO CREATE HEADROOM (Fixes Crackling)
+            preGainNode.gain.value = 0.5; 
             
-            // --- Advanced 8D Setup ---
             pannerNode = new StereoPannerNode(audioCtx, { pan: 0 });
             filterNode = audioCtx.createBiquadFilter();
             filterNode.type = 'lowpass';
@@ -876,10 +876,6 @@
             
             gainNode8D = audioCtx.createGain();
             gainNode8D.gain.value = 1.0;
-
-            // Simple Delay for Spatial Width in 8D
-            delayNode = audioCtx.createDelay(0.5);
-            delayNode.delayTime.value = 0; 
 
             audioSource.connect(preGainNode);
             let prevNode = preGainNode;
@@ -890,7 +886,7 @@
                 filter.frequency.value = freq;
                 if (index <= 1) filter.type = 'lowshelf'; 
                 else if (index === djFrequencies.length - 1) filter.type = 'highshelf';
-                else { filter.type = 'peaking'; filter.Q.value = 1.2; } // Improved Q
+                else { filter.type = 'peaking'; filter.Q.value = 1.2; } 
                 
                 filter.gain.value = eqPresets[eqMode][index];
                 
@@ -899,14 +895,14 @@
                 eqBands.push(filter);
             });
             
+            // Compressor Tuned as a Limiter to catch peaks
             compressorNode = audioCtx.createDynamicsCompressor();
-            compressorNode.threshold.value = -12; // Tuned for punch
-            compressorNode.knee.value = 30; 
-            compressorNode.ratio.value = 12; 
-            compressorNode.attack.value = 0.003; 
-            compressorNode.release.value = 0.25;
+            compressorNode.threshold.value = -3; // Only catch very loud peaks
+            compressorNode.knee.value = 5; 
+            compressorNode.ratio.value = 15; 
+            compressorNode.attack.value = 0.005; 
+            compressorNode.release.value = 0.1;
             
-            // Connect: EQ -> 8D Chain -> Compressor -> Destination
             prevNode.connect(gainNode8D);
             gainNode8D.connect(filterNode);
             filterNode.connect(pannerNode);
@@ -925,7 +921,9 @@
         function applyEqMode() {
             const btn = document.getElementById('dj-btn');
             const modes = ["Normal", "Deep Bass", "Enhanced", "8D Audio"];
-            const preGains = [1.0, 1.2, 1.1, 1.3]; 
+            
+            // Significant Pre-Gain reduction for Bass Mode to avoid clipping
+            const preGains = [0.9, 0.4, 0.5, 0.6]; 
 
             btn.classList.remove('mode-bass', 'mode-enhanced', 'mode-8d');
 
@@ -950,25 +948,22 @@
             if(preGainNode.gain.setTargetAtTime) preGainNode.gain.setTargetAtTime(targetPreGain, now, 0.1);
             else preGainNode.gain.value = targetPreGain;
 
-            // --- IMPROVED 8D ALGORITHM (Figure-8 Path) ---
             if(pannerInterval) cancelAnimationFrame(pannerInterval);
             
+            // --- SMOOTHED 8D ALGORITHM (No crackling) ---
             if(eqMode === 3) {
                 const start8D = () => {
-                    const t = Date.now() / 3000; // Speed control
-                    
-                    // Complex figure-8 movement for realism
+                    const t = Date.now() / 3000; 
                     const x = Math.sin(t);
-                    const z = Math.cos(t) * Math.sin(t); 
                     
-                    pannerNode.pan.value = x * 0.95; // Wide stereo
+                    // Smooth pan transition
+                    pannerNode.pan.value = x * 0.9; 
 
-                    // Filter simulates front/back absorption
-                    const freq = (Math.cos(t) < 0) ? 6000 : 18000;
-                    filterNode.frequency.value = filterNode.frequency.value * 0.95 + freq * 0.05; // Smooth transition
+                    // Gentle Filter modulation
+                    const freq = (Math.cos(t) < 0) ? 8000 : 18000;
+                    filterNode.frequency.value = filterNode.frequency.value * 0.95 + freq * 0.05; 
 
-                    // Volume modulation (Head shadow effect)
-                    const distGain = 0.85 + (0.15 * Math.abs(Math.cos(t)));
+                    const distGain = 0.9 + (0.1 * Math.abs(Math.cos(t)));
                     gainNode8D.gain.value = distGain;
 
                     pannerInterval = requestAnimationFrame(start8D);
@@ -1170,7 +1165,6 @@
             loadAndPlay();
         }
 
-        // --- CORE PLAYBACK & BUFFERING LOGIC ---
         async function loadAndPlay(usePreloaded = false) {
             playSessionId++;
             const currentSession = playSessionId;
@@ -1206,12 +1200,10 @@
                 }
             } 
             else {
-                // Online streaming with aggressive buffer
                 if(currentSession === playSessionId) {
                     audio.src = song.url;
                     audio.play().catch(e => { if(!navigator.onLine) showToast("Network Error", "error"); });
                     
-                    // Immediately fetch to buffer/cache the CURRENT song
                     fetch(song.url, {priority: 'high'}).then(res => res.blob()).then(blob => {
                         if(currentSession === playSessionId) saveBlob(song.url, blob);
                     }).catch(()=>{});
@@ -1220,24 +1212,19 @@
             audio.title = song.title;
         }
 
-        // --- SMART PRELOAD FUNCTION ---
         async function preloadNextSong() {
             if(player.queue.length <= 1) return;
-            // Determine next song index
             let nextIndex;
             if (isShuffle) nextIndex = Math.floor(Math.random() * player.queue.length);
             else nextIndex = (player.songIndex + 1) % player.queue.length;
             
             const nextSong = player.queue[nextIndex];
             
-            // Check if already cached
             const exists = await getBlob(nextSong.url);
             if(!exists && navigator.onLine) {
-                // Silently fetch and store
                 fetch(nextSong.url, {priority: 'low'}).then(res => res.blob()).then(blob => {
                     saveBlob(nextSong.url, blob);
                     updateCacheMeta(nextSong.url);
-                    console.log(`Preloaded: ${nextSong.title}`);
                 }).catch(()=>{});
             }
         }
@@ -1286,7 +1273,6 @@
                 document.getElementById('curr-time').innerText = formatTime(curr);
                 document.getElementById('mp-progress').style.width = `${(curr / duration) * 100}%`;
                 
-                // --- 20% RULE PRELOAD TRIGGER ---
                 if (!isNextPreloaded && (curr / duration) > 0.20) {
                     isNextPreloaded = true;
                     preloadNextSong();
