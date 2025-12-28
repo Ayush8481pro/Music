@@ -1,4 +1,4 @@
-<!-- --- START OF FILE ai_studio_code - 2025-12-28T214500.000.html --- -->
+<!-- --- START OF FILE ai_studio_code - 2025-12-28T221700.000.html --- -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -455,7 +455,7 @@
 
         if ('serviceWorker' in navigator) {
             const swContent = `
-                const CACHE_NAME = 'm8481-v30';
+                const CACHE_NAME = 'm8481-v32';
                 const ASSETS = ${JSON.stringify(ASSETS)};
                 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))); });
                 self.addEventListener('activate', (e) => { e.waitUntil(self.clients.claim()); });
@@ -469,7 +469,7 @@
         }
 
         async function cacheEssentialAssets() {
-            if('caches' in window) { try { const cache = await caches.open('m8481-v30'); await cache.addAll(ASSETS); } catch(e) {} }
+            if('caches' in window) { try { const cache = await caches.open('m8481-v32'); await cache.addAll(ASSETS); } catch(e) {} }
         }
 
         let db;
@@ -545,6 +545,7 @@
         let playSessionId = 0; 
         let cacheTimer = null; 
         let isNextPreloaded = false; // Flag for smart preloading
+        let activeFetchController = null; // Controller to abort background downloads
 
         let isShuffle = false;
         let isLoop = false;
@@ -556,11 +557,11 @@
         // Tuned for better separation
         const djFrequencies = [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
         
-        // REFINED PRESETS TO PREVENT CLIPPING
+        // REFINED PRESETS (Punchy but safe)
         const eqPresets = [
-            [0,0,0,0,0,0,0,0,0,0], // Normal (Flat)
-            [6, 5, 2, -2, -2, 0, 1, 2, 3, 3], // Deep Bass (Clean Sub, cut mud, clear highs)
-            [4, 3, 0, -1, -2, 0, 3, 5, 5, 5], // Enhanced (V-Shape: Crisp)
+            [0,0,0,0,0,0,0,0,0,0], // Normal
+            [6, 5, 2, -1, -1, 0, 1, 2, 3, 3], // Deep Bass (Clean Sub)
+            [4, 3, 1, -1, -2, 0, 3, 5, 6, 6], // Enhanced (Crisp V-Shape)
             [3, 3, 1, 0, 0, 0, 0, 1, 2, 2] // 8D Base
         ];
         
@@ -866,8 +867,8 @@
             audioSource = audioCtx.createMediaElementSource(audio);
             
             preGainNode = audioCtx.createGain();
-            // LOWER GAIN TO CREATE HEADROOM (Fixes Crackling)
-            preGainNode.gain.value = 0.5; 
+            // Balanced gain for headroom + loudness
+            preGainNode.gain.value = 0.8; 
             
             pannerNode = new StereoPannerNode(audioCtx, { pan: 0 });
             filterNode = audioCtx.createBiquadFilter();
@@ -895,13 +896,13 @@
                 eqBands.push(filter);
             });
             
-            // Compressor Tuned as a Limiter to catch peaks
+            // Compressor Limiter
             compressorNode = audioCtx.createDynamicsCompressor();
-            compressorNode.threshold.value = -3; // Only catch very loud peaks
-            compressorNode.knee.value = 5; 
+            compressorNode.threshold.value = -3; 
+            compressorNode.knee.value = 10; 
             compressorNode.ratio.value = 15; 
             compressorNode.attack.value = 0.005; 
-            compressorNode.release.value = 0.1;
+            compressorNode.release.value = 0.15;
             
             prevNode.connect(gainNode8D);
             gainNode8D.connect(filterNode);
@@ -922,8 +923,7 @@
             const btn = document.getElementById('dj-btn');
             const modes = ["Normal", "Deep Bass", "Enhanced", "8D Audio"];
             
-            // Significant Pre-Gain reduction for Bass Mode to avoid clipping
-            const preGains = [0.9, 0.4, 0.5, 0.6]; 
+            const preGains = [0.9, 0.6, 0.7, 0.8]; 
 
             btn.classList.remove('mode-bass', 'mode-enhanced', 'mode-8d');
 
@@ -950,16 +950,14 @@
 
             if(pannerInterval) cancelAnimationFrame(pannerInterval);
             
-            // --- SMOOTHED 8D ALGORITHM (No crackling) ---
+            // --- SMOOTHED 8D ALGORITHM ---
             if(eqMode === 3) {
                 const start8D = () => {
-                    const t = Date.now() / 3000; 
+                    const t = Date.now() / 3500; 
                     const x = Math.sin(t);
                     
-                    // Smooth pan transition
                     pannerNode.pan.value = x * 0.9; 
 
-                    // Gentle Filter modulation
                     const freq = (Math.cos(t) < 0) ? 8000 : 18000;
                     filterNode.frequency.value = filterNode.frequency.value * 0.95 + freq * 0.05; 
 
@@ -1171,9 +1169,14 @@
             const song = player.queue[player.songIndex];
             player.originalUrl = song.url;
             
+            // --- FIX: ABORT PREVIOUS DOWNLOADS ---
+            if(activeFetchController) {
+                activeFetchController.abort();
+                activeFetchController = null;
+            }
             if(cacheTimer) clearTimeout(cacheTimer);
-            isNextPreloaded = false; // Reset preload flag for new song
-
+            
+            isNextPreloaded = false; 
             player.isPlaying = false;
             document.getElementById('mp-img').classList.remove('spin-anim');
 
@@ -1201,12 +1204,28 @@
             } 
             else {
                 if(currentSession === playSessionId) {
+                    // --- FIX: PLAY INSTANTLY ---
                     audio.src = song.url;
-                    audio.play().catch(e => { if(!navigator.onLine) showToast("Network Error", "error"); });
                     
-                    fetch(song.url, {priority: 'high'}).then(res => res.blob()).then(blob => {
-                        if(currentSession === playSessionId) saveBlob(song.url, blob);
-                    }).catch(()=>{});
+                    audio.play().catch(e => { 
+                        if(!navigator.onLine) showToast("Network Error", "error"); 
+                    });
+                    
+                    // --- FIX: DELAYED CACHING ---
+                    // Wait 4 seconds before starting cache download to prioritize playback
+                    activeFetchController = new AbortController();
+                    const signal = activeFetchController.signal;
+                    
+                    cacheTimer = setTimeout(() => {
+                        if(currentSession === playSessionId && !signal.aborted) {
+                            fetch(song.url, { signal })
+                                .then(res => res.blob())
+                                .then(blob => {
+                                    if(currentSession === playSessionId) saveBlob(song.url, blob);
+                                })
+                                .catch(err => { /* Abort ignored */ });
+                        }
+                    }, 4000); 
                 }
             }
             audio.title = song.title;
@@ -1262,6 +1281,21 @@
         });
         audio.addEventListener('ended', () => { if(isLoop) { audio.currentTime = 0; audio.play(); } else nextSong(true); });
         
+        // --- NOTIFICATION SYNC FIXES ---
+        const syncMediaSessionPosition = () => {
+             if ('mediaSession' in navigator && !isNaN(audio.duration) && isFinite(audio.duration)) {
+                navigator.mediaSession.setPositionState({
+                    duration: audio.duration,
+                    playbackRate: audio.playbackRate,
+                    position: audio.currentTime
+                });
+            }
+        };
+
+        // Trigger on load meta data (Fix for Start/End time same issue)
+        audio.addEventListener('loadedmetadata', syncMediaSessionPosition);
+        audio.addEventListener('durationchange', syncMediaSessionPosition);
+        
         audio.addEventListener('timeupdate', () => { 
             const curr = audio.currentTime; 
             const duration = audio.duration || 1;
@@ -1278,13 +1312,8 @@
                     preloadNextSong();
                 }
 
-                if ('mediaSession' in navigator && !isNaN(audio.duration)) {
-                    navigator.mediaSession.setPositionState({
-                        duration: audio.duration,
-                        playbackRate: audio.playbackRate,
-                        position: audio.currentTime
-                    });
-                }
+                syncMediaSessionPosition();
+                
                 if(Math.floor(curr) % 5 === 0) saveSession();
             } 
         });
@@ -1399,4 +1428,4 @@
         }
     </script>
 </body>
-    </html>
+        </html>
