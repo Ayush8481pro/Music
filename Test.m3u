@@ -1,0 +1,26 @@
+#EXTM3U
+#EXTINF:-1 tvg-id="156" tvg-logo="https://jiotv.catchup.cdn.jio.com/dare_images/images/Star_Gold_HD.png" group-title="STAR",Star Gold HD
+#KODIPROP:inputstream.adaptive.license_type=com.widevine.alpha
+#KODIPROP:inputstream.adaptive.license_key={"keys":[{"kty":"oct","kid":"39b5c756c18355d9978fe6c6311b4891","k":"3aaa7efc64f9b81b91512d1af2c56e3c"}],"type":"temporary"}
+https://jiotvmblive.cdn.jio.com/bpk-tv/Star_Gold_HD_MOB/WDVLive/index.mpd
+
+#EXTINF:-1 tvg-id="1113" tvg-logo="https://jiotv.catchup.cdn.jio.com/dare_images/images/Star_Gold_Select_HD.png" group-title="STAR",Star Gold Select HD
+#KODIPROP:inputstream.adaptive.license_type=com.widevine.alpha
+#KODIPROP:inputstream.adaptive.license_key={"keys":[{"kty":"oct","kid":"8620bd6e911d5c6e88e3bcf4b4ad1f35","k":"7a8178e013c9af468cc4e2171b6f9857"}],"type":"temporary"}
+https://jiotvmblive.cdn.jio.com/bpk-tv/Star_Gold_Select_HD_MOB/WDVLive/index.mpd
+
+#EXTINF:-1 tvg-id="1119" tvg-logo="https://jiotv.catchup.cdn.jio.com/dare_images/images/Star_Gold_Select.png" group-title="STAR",Star Gold Select
+https://jiotvmblive.cdn.jio.com/bpk-tv/Star_Gold_Select_MOB/WDVLive/index.mpd
+
+#EXTINF:-1 tvg-id="3097" tvg-logo="https://jiotv.catchup.cdn.jio.com/dare_images/images/Star_Gold_Romance.png" group-title="STAR",Star Gold Romance
+#KODIPROP:inputstream.adaptive.license_type=com.widevine.alpha
+#KODIPROP:inputstream.adaptive.license_key={"keys":[{"kty":"oct","kid":"cfdc17b8d45d5e199db366e26e931119","k":"bb42ae3bb74b9172e79e986b59d40085"}],"type":"temporary"}
+https://jiotvmblive.cdn.jio.com/bpk-tv/Star_Gold_Romance_MOB/WDVLive/index.mpd
+
+#EXTINF:-1 tvg-id="3096" tvg-logo="https://jiotv.catchup.cdn.jio.com/dare_images/images/Star_Gold_2_HD.png" group-title="STAR",Star Gold 2 HD
+#KODIPROP:inputstream.adaptive.license_type=com.widevine.alpha
+#KODIPROP:inputstream.adaptive.license_key={"keys":[{"kty":"oct","kid":"e6afa4754bc15dd28ab6806f417d319d","k":"6a74ef2884813547109ee96098610387"}],"type":"temporary"}
+https://jiotvmblive.cdn.jio.com/bpk-tv/Star_Gold_2_HD_BTS/WDVLive/index.mpd
+
+#EXTINF:-1 tvg-logo="" group-title="STAR",Testing
+https://ayushjioauthserver.onrender.com/authorization/mEbP7Bsp86cKZdsYlRL9UgLCL
