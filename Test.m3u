@@ -8,7 +8,7 @@ https://jiotvcod.cdn.jio.com/bpk-tv/Sony_HD_MOB/WDVCatchup/index.mpd?begin=20260
 #KODIPROP:inputstream.adaptive.license_type=clearkey
 #KODIPROP:inputstream.adaptive.license_key=5b5b4b88f3005b0489034d25478292eb:a401861fb99d6e41c9d9e309ca9837b3
 #EXTINF:-1 tvg-id="1113" tvg-name="Star Gold Select HD" tvg-logo="https://jiotv.catchup.cdn.jio.com/dare_images/images/Star_Gold_Select_HD.png" group-title="STAR",Star Gold Select HD
-https://jiotvcod.cdn.jio.com/bpk-tv/SonyPAL_MOB/WDVCatchup/index.mpd?begin=20260831T184100&end=20260831T190100&__hdnea__=
+https://jiotvcod.cdn.jio.com/bpk-tv/SonyPAL_MOB/WDVCatchup/index.mpd?begin=20260831T184100&end=20260831T190100&__hdnea__=st=1788330526~exp=1788416926~acl=/*~hmac=4efd84260bb8568dd4fdfa5b8af5c488013675d324feef1bf4b54efe6b89b5f1
 
 #EXTINF:-1 tvg-id="1119" tvg-name="Star Gold Select" tvg-logo="https://jiotv.catchup.cdn.jio.com/dare_images/images/Star_Gold_Select.png" group-title="STAR",Star Gold चुनें
 https://jiotvmblive.cdn.jio.com/bpk-tv/Star_Gold_Select_MOB/WDVLive/index.mpd?__hdnea__=st=1786572039~exp=1786593639~acl=/*~hmac=aa32aca1ec2d7b88c1b1a6e1dbde9c792485b81aa6d19d83b3d841aca33f73d1
