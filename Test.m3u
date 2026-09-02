@@ -2,24 +2,26 @@
 #KODIPROP:inputstream.adaptive.manifest_type=mpd
 #KODIPROP:inputstream.adaptive.license_type=clearkey
 #KODIPROP:inputstream.adaptive.license_key=null:null
-#EXTINF:-1 tvg-id="156" tvg-name="Star Gold HD" tvg-logo="https://jiotv.catchup.cdn.jio.com/dare_images/images/Star_Gold_HD.png" group-title="STAR",Star Gold HD
-https://jiotvcod.cdn.jio.com/bpk-tv/Sony_HD_MOB/WDVCatchup/index.mpd?begin=20260831T143000&end=20260831T153000&__hdnea__=st=1788286858~exp=1788373258~acl=/*~hmac=afd4144c4beb9ac38a064ea9d33bf2aec4f50aad2522758f6b374c773abb60dc
+#EXTINF:-1 tvg-id="156" tvg-name="Star Gold HD" tvg-logo="https://jiotv.catchup.cdn.jio.com/dare_images/images/Star_Gold_HD.png" group-title="STAR",Star Gold एचडी
+https://jiotvcod.cdn.jio.com/bpk-tv/Sony_HD_MOB/WDVCatchup/index.mpd?begin=20260831T143000&end=20260831T153000&__hdnea__=st=1788286858~exp=1788373258~acl=/*~hmac=afd4144c4beb9ac38a064ea9d33bf2aec4f50aad2522758f6b374c773abb 60dc
 #KODIPROP:inputstream.adaptive.manifest_type=mpd
 #KODIPROP:inputstream.adaptive.license_type=clearkey
 #KODIPROP:inputstream.adaptive.license_key=5b5b4b88f3005b0489034d25478292eb:a401861fb99d6e41c9d9e309ca9837b3
 #EXTINF:-1 tvg-id="1113" tvg-name="Star Gold Select HD" tvg-logo="https://jiotv.catchup.cdn.jio.com/dare_images/images/Star_Gold_Select_HD.png" group-title="STAR",Star Gold Select HD
-https://jiotvmblive.cdn.jio.com/bpk-tv/Star_Gold_Select_HD_MOB/WDVLive/index.mpd?__hdnea__=st=1786572039~exp=1786593639~acl=/*~hmac=aa32aca1ec2d7b88c1b1a6e1dbde9c792485b81aa6d19d83b3d841aca33f73d1
-#EXTINF:-1 tvg-id="1119" tvg-name="Star Gold Select" tvg-logo="https://jiotv.catchup.cdn.jio.com/dare_images/images/Star_Gold_Select.png" group-title="STAR",Star Gold Select
+https://jiotvcod.cdn.jio.com/bpk-tv/SonyPAL_MOB/WDVCatchup/index.mpd?begin=20260831T184100&end=20260831T190100&__hdnea__=
+
+#EXTINF:-1 tvg-id="1119" tvg-name="Star Gold Select" tvg-logo="https://jiotv.catchup.cdn.jio.com/dare_images/images/Star_Gold_Select.png" group-title="STAR",Star Gold चुनें
 https://jiotvmblive.cdn.jio.com/bpk-tv/Star_Gold_Select_MOB/WDVLive/index.mpd?__hdnea__=st=1786572039~exp=1786593639~acl=/*~hmac=aa32aca1ec2d7b88c1b1a6e1dbde9c792485b81aa6d19d83b3d841aca33f73d1
-#KODIPROP:inputstream.adaptive.manifest_type=mpd
+#KODIPROP: inputstream.adaptive.manifest_type=mpd
 #KODIPROP:inputstream.adaptive.license_type=clearkey
 #KODIPROP:inputstream.adaptive.license_key=cfdc17b8d45d5e199db366e26e931119:bb42ae3bb74b9172e79e986b59d40085
-#EXTINF:-1 tvg-id="3097" tvg-name="Star Gold Romance" tvg-logo="https://jiotv.catchup.cdn.jio.com/dare_images/images/Star_Gold_Romance.png" group-title="STAR",Star Gold Romance
+#EXTINF:-1 tvg-id="3097" tvg-name="Star Gold Romance" tvg-logo="https://jiotv.catchup.cdn.jio.com/dare_images/images/Star_Gold_Romance.png" group-title="STAR",Star Gold रोमांस
 https://jiotvmblive.cdn.jio.com/bpk-tv/Star_Gold_Romance_MOB/WDVLive/index.mpd?__hdnea__=st=1786572039~exp=1786593639~acl=/*~hmac=aa32aca1ec2d7b88c1b1a6e1dbde9c792485b81aa6d19d83b3d841aca33f73d1
-#KODIPROP:inputstream.adaptive.manifest_type=mpd
+#KODIPROP :inputstream.adaptive.manifest_type=mpd
 #KODIPROP:inputstream.adaptive.license_type=clearkey
 #KODIPROP:inputstream.adaptive.license_key=e6afa4754bc15dd28ab6806f417d319d:6a74ef2884813547109ee96098610387
-#EXTINF:-1 tvg-id="3096" tvg-name="Star Gold 2 HD" tvg-logo="https://jiotv.catchup.cdn.jio.com/dare_images/images/Star_Gold_2_HD.png" group-title="STAR",Star Gold 2 HD
+#EXTINF:-1 tvg-id="3096" tvg-name="Star Gold 2 HD" tvg-logo="https://jiotv.catchup.cdn.jio.com/dare_images/images/Star_Gold_2_HD.png" group-title="STAR",Star Gold 2 एचडी
 https://jiotvpllive.cdn.jio.com/bpk-tv/Star_Gold_2_HD_BTS/WDVLive/index.mpd?__hdnea__=st=1786566312~exp=1786587912~acl=/bpk-tv/Star_Gold_2_HD_BTS/WDVLive/*~hmac=f7a849f92e493e68fbac3d3ecd576b8cf2ef908e486a10248af9df51b16d6845
-#EXTINF:-1 tvg-id="0-9-zeehindustan" tvg-name="Zee Bharat" tvg-logo="https://akamaividz2.zee5.com/image/upload/w_1197,h_674,c_scale,f_webp,q_auto:eco/resources/0-9-zeehindustan/channel_list/1920x1080list3cb4b5501cb44601b20150df7739eb34.png" group-title="Zee5",h_674,c_scale,f_webp,q_auto:eco/resources/0-9-zeehindustan/channel_list/1920x1080list3cb4b5501cb44601b20150df7739eb34.png" group-title="Zee5",Zee Bharat 
+#EXTINF:-1 tvg-id="0-9-zeehindustan" tvg-name="Zee Bharat" tvg-logo="https://akamaividz2.zee5.com/image/upload/w_1197,h_674,c_scale,f_webp,q_auto:eco/resources/0-9-zeehindustan/channel_list/1920x1080list3cb4b5501cb44601b20150df7739eb34.png" group-title="Zee5",h_674,c_scale,f_webp,q_auto:eco/resources/0-9-zeehindustan/channel_list/1920x1080list3cb4b5501cb44601b20150df7739eb34.png" group-title="Zee5",Zee Bharat
 https://ayushjioauthserver.onrender.com/authorization/mEbP7Bsp86cKZdsYlRL9UgLCL
+ 
