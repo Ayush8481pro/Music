@@ -1,0 +1,6 @@
+#EXTM3U
+#EXTINF:-1 tvg-id="1108" tvg-name="Star Sports 1 Hindi HD" tvg-logo="https://img.media.jio.com/tvpimages/5/6/301982_1749665314605_l_medium.jpg" group-title="Sports", Star Sports 1 Hindi HD
+#KODIPROP:inputstream=inputstream.adaptive
+#KODIPROP:inputstream.adaptive.license_type=clearkey
+#KODIPROP:inputstream.adaptive.license_key=400131994b445d8c8817202248760fda:2d56cb6f07a75b9aff165d534ae2bfc4
+https://jiotvbpkmob.cdn.jio.com/bpk-tv/Star_Sports_HD1_Hindi_MOB/Fallback/index.m3u8?minrate=80000&maxrate=3024000&__hdnea__=st=1788382134~exp=1788382254~acl=/bpk-tv/Star_Sports_HD1_Hindi_MOB/Fallback/*~hmac=2462b4ecd2e69f523769d6d179b901708a8bab4f9bb0ccb3df260ed01d19625e
