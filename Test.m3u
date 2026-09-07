@@ -1,7 +1,7 @@
 #EXTM3U
 #KODIPROP:inputstream.adaptive.manifest_type=mpd
-#KODIPROP:inputstream.adaptive.license_type=com.widevine.alpha
-#KODIPROP:inputstream.adaptive.license_url=https://ayushdatademo.onrender.com/app/catchup/cpauth.php?ck=5f5f68646e65615f5f3d73743d313738383735383038327e6578703d313738383834343438327e61636c3d2f2a7e686d61633d62393364346333666130353732363564306263313635303039363034346263373462626632616532363163326238346664613338343365653566633738633065&pkey=Sony_HD_MOB/Catchup_Fallback/hls/aes128.key-e26cefe97c265b72be9ad57aae87b3e0-1788739200.pkey
+#KODIPROP:inputstream.adaptive.license_type=clearkey
+#KODIPROP:inputstream.adaptive.license_key=9063389dd6725b0fa334b63659ffde92:e26cefe97c265b72be9ad57aae87b3e0
 #EXTINF:-1 tvg-id="156" tvg-name="Star Gold 1" tvg-logo="https://jiotv.catchup.cdn.jio.com/dare_images/images/Star_Gold_HD.png" group-title="STAR",Star Gold 22
 https://jiotvcod.cdn.jio.com/bpk-tv/Sony_HD_MOB/WDVCatchup/index.mpd?begin=20260831T143000&end=20260831T153000&__hdnea__=st=1788758082~exp=1788844482~acl=/*~hmac=b93d4c3fa057265d0bc1650096044bc74bbf2ae261c2b84fda3843ee5fc78c0e
 #KODIPROP:inputstream.adaptive.manifest_type=mpd
