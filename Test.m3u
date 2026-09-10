@@ -1,9 +1,9 @@
 #EXTM3U
 #KODIPROP:inputstream.adaptive.manifest_type=mpd
 #KODIPROP:inputstream.adaptive.license_type=clearkey
-#KODIPROP:inputstream.adaptive.license_key=d535bbd6a127437cb285b4d2d96d4098:a71b7fd3556055259de890d4852f7b5f
+#KODIPROP:inputstream.adaptive.license_key=0e1cf4f2f8cb3698a2c6017fb1cf886c:a9eefd2e3ad34edb9353995c2c9cbba7
 #EXTINF:-1 tvg-id="156" tvg-name="Star Gold 1" tvg-logo="https://jiotv.catchup.cdn.jio.com/dare_images/images/Star_Gold_HD.png" group-title="STAR",Star Gold 22
-https://drongo-vod.zee5.com/drm1/inhousetranscoder/dash/TV_SHOWS/ZEE_TV/September2026/09092026/Episode/Tumm_Se_Tumm_Tak_Ep427_Episode_09092026_hi_9c9fb2ec551f314ef74a81f194ae096d/manifest-mid.mpd
+https://zee5vod.akamaized.net/drm1/titanfile/dash/MOVIES/V2PRIME/4K/SUPER_PREMIUM/DDPLUS/MRS/MRS_4K_10022025_hi_722d8cd517fda96a39d7abd6234dd506/manifest-mid.mpd
 #KODIPROP:inputstream.adaptive.manifest_type=mpd
 #KODIPROP:inputstream.adaptive.license_type=clearkey
 #KODIPROP:inputstream.adaptive.license_key=5b5b4b88f3005b0489034d25478292eb:86556fd78cf9578e97d3bbc3e1b129e9
