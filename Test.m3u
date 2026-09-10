@@ -6,7 +6,7 @@
 https://zee5vod.akamaized.net/drm1/titanfile/dash/MOVIES/V2PRIME/4K/SUPER_PREMIUM/DDPLUS/MRS/MRS_4K_10022025_hi_722d8cd517fda96a39d7abd6234dd506/manifest-mid.mpd
 #KODIPROP:inputstream.adaptive.manifest_type=mpd
 #KODIPROP:inputstream.adaptive.license_type=clearkey
-#KODIPROP:inputstream.adaptive.license_key=83288845932b374a86b63fabcc8e467e:20ebf03fd45443b58a79846b4c57861e
+#KODIPROP:inputstream.adaptive.license_key=83288845932b374a86b63fabcc8e467e:1808ed86269541fe900e22caf0584b73
 #EXTINF:-1 tvg-id="1113" tvg-name="Star Gold Select HD" tvg-logo="https://jiotv.catchup.cdn.jio.com/dare_images/images/Star_Gold_Select_HD.png" group-title="STAR",Star Gold Select HD
 https://zee5vod.akamaized.net/drm1/titanfile/dash/MOVIES/MULTI_AUDIO/4K/DDPLUS/GEETHA_GOVINDAM/GEETHA_GOVINDAM_4K_23102024_te_f9d808d2f06c7885df8dbfad2370b1aa/manifest-mid.mpd
 
