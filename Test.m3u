@@ -1,9 +1,9 @@
 #EXTM3U
 #KODIPROP:inputstream.adaptive.manifest_type=mpd
 #KODIPROP:inputstream.adaptive.license_type=clearkey
-#KODIPROP:inputstream.adaptive.license_key=0e1cf4f2f8cb3698a2c6017fb1cf886c:722d8cd517fda96a39d7abd6234dd506
+#KODIPROP:inputstream.adaptive.license_key=bd1ea6a1c1fb5dcdb709434e0826bbc0:f57f22cba32739ce7beb1fab3f3d060b
 #EXTINF:-1 tvg-id="156" tvg-name="Star Gold 1" tvg-logo="https://jiotv.catchup.cdn.jio.com/dare_images/images/Star_Gold_HD.png" group-title="STAR",Star Gold 22
-https://zee5vod.akamaized.net/drm1/titanfile/dash/MOVIES/V2PRIME/4K/SUPER_PREMIUM/DDPLUS/MRS/MRS_4K_10022025_hi_722d8cd517fda96a39d7abd6234dd506/manifest-mid.mpd
+https://jiotvmblive.cdn.jio.com/bpk-tv/StarSportsHD2Hin_MOB/Fallback/index.m3u8?__hdnea__=st=1789289659~exp=1789311259~acl=/*~hmac=e54d166f8c7abb27c93e2a06f9c466fc660b72172657f20c34c617b7e3087d0c
 #KODIPROP:inputstream.adaptive.manifest_type=mpd
 #KODIPROP:inputstream.adaptive.license_type=clearkey
 #KODIPROP:inputstream.adaptive.license_key=83288845932b374a86b63fabcc8e467e:1808ed86269541fe900e22caf0584b73
