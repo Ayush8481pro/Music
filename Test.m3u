@@ -1,9 +1,9 @@
 #EXTM3U
 #KODIPROP:inputstream.adaptive.manifest_type=mpd
 #KODIPROP:inputstream.adaptive.license_type=clearkey
-#KODIPROP:inputstream.adaptive.license_key=42566c7287ce545d91234b03485cce8a:bd251578248e2f8df050eb81b04d056a
+#KODIPROP:inputstream.adaptive.license_key=f7c7f6e353af595794a4fa5314efcf10:032763465ca8b2a40e3c57b3f14ed79f
 #EXTINF:-1 tvg-id="156" tvg-name="Star Gold 1" tvg-logo="https://jiotv.catchup.cdn.jio.com/dare_images/images/Star_Gold_HD.png" group-title="STAR",Star Gold 22
-https://jiotvpllive.cdn.jio.com/bpk-tv/SonySportsTen5HDSTB_BTS/WDVLive/index.mpd?__hdnea__=st=1789483820~exp=1789505420~acl=/bpk-tv/SonySportsTen5HDSTB_BTS/WDVLive/*~hmac=5f28ee546e2f300021cdd08cb8239e6c5c0e62bb5ca2d1b33c94e5ead7518ef6
+https://jiotvmblive.cdn.jio.com/bpk-tv/ETV_Cinema_HD_MOB/WDVLive/index.mpd?__hdnea__=st=1789562746~exp=1789584346~acl=/*~hmac=0d70b9fbda6d738816ce6dd126976e090333407b7c07c3b1fd2f55ae1e06ecd0
 #KODIPROP:inputstream.adaptive.manifest_type=mpd
 #KODIPROP:inputstream.adaptive.license_type=clearkey
 #KODIPROP:inputstream.adaptive.license_key=83288845932b374a86b63fabcc8e467e:1808ed86269541fe900e22caf0584b73
