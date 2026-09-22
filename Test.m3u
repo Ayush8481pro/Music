@@ -1,27 +1,7 @@
-#EXTM3U
+#EXTM3U x-tvg-url="http://localhost:5350/epg.xml.gz"
+#EXTINF:-1 tvg-id="143" tvg-name="CNBC TV18 Prime" tvg-logo="http://localhost:5350/jtvimage/CNBCTV18Prime.png" tvg-language="English" tvg-type="Business" group-title="Business", CNBC TV18 Prime
+#KODIPROP:inputstream=inputstream.adaptive
 #KODIPROP:inputstream.adaptive.manifest_type=mpd
-#KODIPROP:inputstream.adaptive.license_type=clearkey
-#KODIPROP:inputstream.adaptive.license_key=f7c7f6e353af595794a4fa5314efcf10:032763465ca8b2a40e3c57b3f14ed79f
-#EXTINF:-1 tvg-id="156" tvg-name="Star Gold 1" tvg-logo="https://jiotv.catchup.cdn.jio.com/dare_images/images/Star_Gold_HD.png" group-title="STAR",Star Gold 22
-https://jiotvmblive.cdn.jio.com/bpk-tv/ETV_Cinema_HD_MOB/WDVLive/index.mpd?__hdnea__=st=1789562746~exp=1789584346~acl=/*~hmac=0d70b9fbda6d738816ce6dd126976e090333407b7c07c3b1fd2f55ae1e06ecd0
-#KODIPROP:inputstream.adaptive.manifest_type=mpd
-#KODIPROP:inputstream.adaptive.license_type=clearkey
-#KODIPROP:inputstream.adaptive.license_key=83288845932b374a86b63fabcc8e467e:1808ed86269541fe900e22caf0584b73
-#EXTINF:-1 tvg-id="1113" tvg-name="Star Gold Select HD" tvg-logo="https://jiotv.catchup.cdn.jio.com/dare_images/images/Star_Gold_Select_HD.png" group-title="STAR",Star Gold Select HD
-https://zee5vod.akamaized.net/drm1/titanfile/dash/MOVIES/MULTI_AUDIO/4K/DDPLUS/GEETHA_GOVINDAM/GEETHA_GOVINDAM_4K_23102024_te_f9d808d2f06c7885df8dbfad2370b1aa/manifest-mid.mpd
-
-#EXTINF:-1 tvg-id="1119" tvg-name="Star Gold Select" tvg-logo="https://jiotv.catchup.cdn.jio.com/dare_images/images/Star_Gold_Select.png" group-title="STAR",Star Gold चुनें
-https://jiotvmblive.cdn.jio.com/bpk-tv/Star_Gold_Select_MOB/WDVLive/index.mpd?__hdnea__=st=1786572039~exp=1786593639~acl=/*~hmac=aa32aca1ec2d7b88c1b1a6e1dbde9c792485b81aa6d19d83b3d841aca33f73d1
-#KODIPROP: inputstream.adaptive.manifest_type=mpd
-#KODIPROP:inputstream.adaptive.license_type=clearkey
-#KODIPROP:inputstream.adaptive.license_key=cfdc17b8d45d5e199db366e26e931119:bb42ae3bb74b9172e79e986b59d40085
-#EXTINF:-1 tvg-id="3097" tvg-name="Star Gold Romance" tvg-logo="https://jiotv.catchup.cdn.jio.com/dare_images/images/Star_Gold_Romance.png" group-title="STAR",Star Gold रोमांस
-https://jiotvmblive.cdn.jio.com/bpk-tv/Star_Gold_Romance_MOB/WDVLive/index.mpd?__hdnea__=st=1786572039~exp=1786593639~acl=/*~hmac=aa32aca1ec2d7b88c1b1a6e1dbde9c792485b81aa6d19d83b3d841aca33f73d1
-#KODIPROP :inputstream.adaptive.manifest_type=mpd
-#KODIPROP:inputstream.adaptive.license_type=clearkey
-#KODIPROP:inputstream.adaptive.license_key=e6afa4754bc15dd28ab6806f417d319d:6a74ef2884813547109ee96098610387
-#EXTINF:-1 tvg-id="3096" tvg-name="Star Gold 2 HD" tvg-logo="https://jiotv.catchup.cdn.jio.com/dare_images/images/Star_Gold_2_HD.png" group-title="STAR",Star Gold 2 एचडी
-https://jiotvpllive.cdn.jio.com/bpk-tv/Star_Gold_2_HD_BTS/WDVLive/index.mpd?__hdnea__=st=1786566312~exp=1786587912~acl=/bpk-tv/Star_Gold_2_HD_BTS/WDVLive/*~hmac=f7a849f92e493e68fbac3d3ecd576b8cf2ef908e486a10248af9df51b16d6845
-#EXTINF:-1 tvg-id="0-9-zeehindustan" tvg-name="Zee Bharat" tvg-logo="https://akamaividz2.zee5.com/image/upload/w_1197,h_674,c_scale,f_webp,q_auto:eco/resources/0-9-zeehindustan/channel_list/1920x1080list3cb4b5501cb44601b20150df7739eb34.png" group-title="Zee5",h_674,c_scale,f_webp,q_auto:eco/resources/0-9-zeehindustan/channel_list/1920x1080list3cb4b5501cb44601b20150df7739eb34.png" group-title="Zee5",Zee Bharat
-https://ayushjioauthserver.onrender.com/authorization/mEbP7Bsp86cKZdsYlRL9UgLCL
- 
+#KODIPROP:inputstream.adaptive.license_type=com.widevine.alpha
+#KODIPROP:inputstream.adaptive.license_key=https://wv-sony.service.expressplay.com/hms/wv/rights/?ExpressPlayToken=CAA2T1gfKdcAJDFhZWU2MmNiLTA2YzQtNDFmZC1iZjdkLWRhZDg2NWFlNWNmYwAAAIAV71quPN1jWsGK2NuEP0PyaA5dfmPQfAvO_FKIjL0kgI5-Jnzuj9-Mj-sAfsuxfiSoUXXW5jVP35uWFZ6rln3gwopl3lRUSJvOuIC-0ADbNKimoU0wjnRDbk3yOPkkX22jJpMxEbuBtsZXGJbiTdhGBg9Y4_VTLPUW2cEkP8yTXjoAsJAbb7tJwP135aIfOqtIaBDv&id=71f87a44f87c6febaf4dd26f43fd397290847798
+https://dishdrm.sonyliv.com/DASH/200b72a9ad444bbca6cb31510fee28d3/1790084781/baseline-std-v4/1090543528_22092026_eng_baseline-800300010.mpd?hdnea=exp=1790143696~acl=/DASH/200b72a9ad444bbca6cb31510fee28d3/1790084781/baseline-std-v4/1090543528_22092026_eng_baseline-800300010.mpd*~id=42a09f4f7b0f4f73914149ae63830e25-1785054766750~hmac=19bac2516de46d7ca1c66b5ec075c468b326e1c09d9fbdda21287b2aa657342b
